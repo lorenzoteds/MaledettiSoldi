@@ -5,134 +5,212 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>MaledettiSoldi 💸</title>
 
-  <!-- PWA & Meta -->
+  <!-- PWA & Icone -->
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <link rel="apple-touch-icon" href="icon-512.png" />
+  <meta name="theme-color" content="#fbb1bd" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="theme-color" content="#ff8fab" />
 
-  <!-- Fonts & CDN -->
+  <!-- Font carini e leggibili -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Supabase CDN & Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root {
-      --bg: #fff8f3;
+      --bg: #fcf8f5;
       --card-bg: #ffffff;
-      --border: #f0e4d8;
-      --text: #4a3e3d;
-      --text-muted: #9c8e8c;
-      --income: #2a9d8f;
-      --income-bg: #e8f7f5;
-      --expense: #e76f51;
-      --expense-bg: #fdf0ec;
-      --primary: #ff8fab;
-      --primary-dark: #fb6f92;
-      --accent: #ffd166;
-      --radius: 20px;
+      --border: #f0e4dc;
+      --text: #413534;
+      --text-muted: #958582;
+      --income: #2cb67d;
+      --income-bg: #e8f8f2;
+      --expense: #e63946;
+      --expense-bg: #ffebee;
+      --primary: #fbb1bd;
+      --primary-dark: #f28482;
+      --veronica: #9d4edd;
+      --veronica-bg: #f5edfc;
+      --veronica-border: #e2cbf8;
+      --lorenzo: #0077b6;
+      --lorenzo-bg: #edf6fc;
+      --lorenzo-border: #cae6f8;
+      --radius: 18px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 14px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 480px; }
+    body { background-color: var(--bg); color: var(--text); padding: 12px; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 860px; }
     .hidden { display: none !important; }
 
-    h1, h2, h3 { font-family: 'Comfortaa', cursive; color: #3d3130; }
+    h1, h2, h3 { font-family: 'Comfortaa', cursive; color: #372a29; }
 
     /* Header Nav */
-    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .app-title { font-size: 1.25rem; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+    .app-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; padding: 6px 4px;
+    }
+    .app-title { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .nav-actions { display: flex; gap: 6px; }
     .btn-pill {
-      background: #fbf0e6; border: 1.5px solid #ebdcd0; color: #7d6b69;
-      padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 700;
+      background: #f3eae3; border: none; color: #6d5b58; padding: 6px 12px;
+      border-radius: 20px; font-weight: 700; font-size: 0.78rem; cursor: pointer;
+      transition: all 0.2s;
     }
-    .btn-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-pill.active { background: var(--primary-dark); color: white; }
 
-    /* Mese Navigator */
+    /* Barra navigazione Mese */
     .month-bar {
       display: flex; justify-content: space-between; align-items: center;
-      background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 16px;
-      padding: 8px 14px; margin-bottom: 14px;
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 8px 14px; margin-bottom: 14px;
     }
-    .month-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text); padding: 4px 8px; }
-    .month-title { font-weight: 700; font-size: 0.95rem; text-transform: capitalize; }
+    .month-btn {
+      background: #fbf0e8; border: none; font-size: 1rem; color: #846f6b;
+      cursor: pointer; padding: 4px 12px; border-radius: 10px; font-weight: 700;
+    }
+    .month-title { font-size: 1rem; font-weight: 800; font-family: 'Comfortaa', cursive; text-transform: capitalize; }
 
-    /* KPI Summary */
-    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
-    .card { background: var(--card-bg); border-radius: 16px; padding: 10px 6px; text-align: center; border: 1.5px solid var(--border); }
+    /* Saldi Totali */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .card { background: var(--card-bg); border-radius: 14px; padding: 10px 8px; text-align: center; border: 1.5px solid var(--border); }
     .card span { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
-    .card strong { font-size: 1.05rem; display: block; margin-top: 4px; }
+    .card strong { font-size: 1.05rem; display: block; margin-top: 3px; }
     .val-income { color: var(--income); }
     .val-expense { color: var(--expense); }
-    .val-balance { color: #4361ee; }
+    .val-balance { color: #3a86ff; }
 
-    /* Schede e Moduli */
+    /* Form & Sezioni */
     .section-card {
-      background: var(--card-bg); border-radius: var(--radius); padding: 18px; margin-bottom: 16px;
-      border: 1.5px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+      background: var(--card-bg); border-radius: var(--radius); padding: 16px;
+      margin-bottom: 16px; border: 1.5px solid var(--border);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.02);
     }
     .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    label { font-size: 0.78rem; color: var(--text-muted); font-weight: 700; margin-left: 2px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-left: 2px; }
     input, select {
-      background: #faf6f0; border: 1.5px solid #ebdcd0; border-radius: 12px; color: var(--text);
-      padding: 10px; font-size: 0.95rem; outline: none; width: 100%;
+      background: #faf4ee; border: 1.5px solid #ebdcd0; border-radius: 12px;
+      color: var(--text); padding: 10px; font-size: 0.9rem; outline: none; width: 100%;
     }
-    input:focus, select:focus { border-color: var(--primary); background: #fff; }
-    
+    input:focus, select:focus { border-color: var(--primary-dark); background: #fff; }
     .btn-submit {
       width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white; border: none; border-radius: 14px; padding: 12px; font-size: 1rem;
-      font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(251, 111, 146, 0.25);
+      color: white; border: none; border-radius: 14px; padding: 12px; font-size: 0.98rem;
+      font-weight: 800; cursor: pointer; margin-top: 4px;
     }
-    .btn-submit:active { transform: scale(0.98); }
 
-    /* Lista Movimenti */
+    /* Griglia a Due Colonne: Veronica & Lorenzo */
+    .columns-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .columns-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .column-box {
+      background: #ffffff;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column-box.veronica-col {
+      border-color: var(--veronica-border);
+      background: linear-gradient(180deg, var(--veronica-bg) 0%, #ffffff 120px);
+    }
+
+    .column-box.lorenzo-col {
+      border-color: var(--lorenzo-border);
+      background: linear-gradient(180deg, var(--lorenzo-bg) 0%, #ffffff 120px);
+    }
+
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(0,0,0,0.08);
+    }
+
+    .column-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .veronica-col .column-title { color: var(--veronica); }
+    .lorenzo-col .column-title { color: var(--lorenzo); }
+
+    .column-total {
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
+
+    .veronica-col .column-total { background: #ecd9fa; color: var(--veronica); }
+    .lorenzo-col .column-total { background: #d7eefc; color: var(--lorenzo); }
+
+    /* Singola voce di spesa */
     .tx-item {
       display: flex; justify-content: space-between; align-items: center;
-      background: var(--card-bg); border-radius: 14px; padding: 10px 14px; margin-bottom: 8px;
-      border: 1.5px solid var(--border);
+      background: #ffffff; border-radius: 12px; padding: 9px 10px; margin-bottom: 7px;
+      border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .tx-left { display: flex; align-items: center; gap: 10px; }
+    .tx-left { display: flex; align-items: center; gap: 8px; }
     .tx-icon {
-      font-size: 1.4rem; width: 38px; height: 38px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; background: #fff2f5;
+      font-size: 1.25rem; width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; background: #fff5f2;
     }
-    .tx-cat { font-weight: 700; font-size: 0.9rem; }
+    .tx-cat { font-weight: 700; font-size: 0.88rem; }
     .tx-meta { font-size: 0.72rem; color: var(--text-muted); }
-    .tx-badge { background: #f3eee9; padding: 2px 6px; border-radius: 8px; font-weight: 700; font-size: 0.68rem; }
-    .tx-amount { font-weight: 800; font-size: 0.95rem; }
-    .btn-del { background: transparent; border: none; color: #cfc2bd; font-size: 1.2rem; cursor: pointer; margin-left: 6px; }
+    .tx-amount { font-weight: 800; font-size: 0.92rem; white-space: nowrap; }
+    .btn-del { background: transparent; border: none; color: #cfbeba; font-size: 1.15rem; cursor: pointer; padding: 0 2px; margin-left: 6px; }
     .btn-del:hover { color: var(--expense); }
 
-    /* Admin / Report Panel */
-    .admin-action-box { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-    .btn-admin {
-      background: #faf6f0; border: 1.5px solid #ebdcd0; padding: 12px; border-radius: 12px;
-      font-weight: 700; color: var(--text); cursor: pointer; text-align: center;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
+    .empty-placeholder {
+      text-align: center; color: var(--text-muted); font-size: 0.8rem;
+      padding: 24px 8px; font-style: italic;
     }
-    .btn-admin:hover { background: #fff; border-color: var(--primary); }
 
-    /* Canvas Grafico */
-    .chart-box { height: 220px; position: relative; margin-top: 10px; display: flex; justify-content: center; }
+    /* Tab Grafici & Admin */
+    .chart-box { max-width: 340px; margin: 0 auto 14px auto; }
+    .btn-admin {
+      width: 100%; background: #fbf3ec; border: 1.5px solid #ebdcd0;
+      color: #634f4b; border-radius: 12px; padding: 12px; font-weight: 700;
+      font-size: 0.88rem; cursor: pointer; margin-bottom: 10px; display: flex;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-admin:hover { background: #f7e6d9; }
   </style>
 </head>
 <body>
   <div class="container">
 
     <!-- LOGIN -->
-    <div id="login-view" style="margin-top: 60px; text-align: center;">
+    <div id="login-view" style="margin-top: 60px; text-align: center; max-width: 420px; margin-left: auto; margin-right: auto;">
       <div class="section-card">
         <div style="font-size: 3.5rem; margin-bottom: 8px;">🐷💸</div>
         <h2 style="font-size: 1.4rem; margin-bottom: 4px;">MaledettiSoldi</h2>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px;">I conti di famiglia in armonia</p>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px;">I conti di casa in armonia</p>
         <form id="login-form">
           <div class="form-group" style="text-align: left;">
             <label for="login-email">Email</label>
@@ -150,7 +228,7 @@
 
     <!-- MAIN APP -->
     <div id="app-view" class="hidden">
-      <!-- Intestazione e Menu Viste -->
+      <!-- Intestazione e Navigazione -->
       <div class="app-header">
         <div class="app-title">🐷 MaledettiSoldi</div>
         <div class="nav-actions">
@@ -161,16 +239,16 @@
         </div>
       </div>
 
-      <!-- Barra Mese (Attiva ovunque) -->
+      <!-- Barra Mese Corrente -->
       <div class="month-bar">
         <button class="month-btn" onclick="changeMonth(-1)">◀</button>
         <div class="month-title" id="current-month-label">Caricamento...</div>
         <button class="month-btn" onclick="changeMonth(1)">▶</button>
       </div>
 
-      <!-- VISTA 1: SPESE & INSERIMENTO -->
+      <!-- VISTA 1: SPESE & DUE COLONNE -->
       <div id="view-home">
-        <!-- Saldi Mensili -->
+        <!-- Saldi Mensili Generali -->
         <div class="summary-grid">
           <div class="card" style="background: var(--income-bg); border-color: #ccefe9;">
             <span>Entrate</span>
@@ -186,7 +264,7 @@
           </div>
         </div>
 
-        <!-- Modulo Nuova Spesa -->
+        <!-- Form Nuova Voce -->
         <div class="section-card">
           <form id="tx-form">
             <div class="form-row">
@@ -220,8 +298,8 @@
               <div class="form-group">
                 <label for="author">Chi Spende?</label>
                 <select id="author" required>
-                  <option value="Lorenzo">🧔 Lorenzo</option>
                   <option value="Veronica">👩 Veronica</option>
+                  <option value="Lorenzo">🧔 Lorenzo</option>
                 </select>
               </div>
             </div>
@@ -233,95 +311,140 @@
               </div>
               <div class="form-group">
                 <label for="description">Nota</label>
-                <input type="text" id="description" placeholder="Es. Conad..." />
+                <input type="text" id="description" placeholder="Es. Conad, Enel..." />
               </div>
             </div>
 
-            <button type="submit" class="btn-submit" id="btn-save">+ Aggiungi Movimento ✨</button>
+            <button type="submit" class="btn-submit" id="btn-save">+ Salva Movimento ✨</button>
           </form>
         </div>
 
-        <!-- Lista Movimenti del Mese -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <h3 style="font-size: 0.95rem;">Movimenti di questo mese</h3>
-          <span id="tx-count" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700;">0 voci</span>
+        <!-- DUE COLONNE: VERONICA E LORENZO -->
+        <div class="columns-container">
+          <!-- Colonna Veronica -->
+          <div class="column-box veronica-col">
+            <div class="column-header">
+              <div class="column-title">👩 Veronica</div>
+              <div class="column-total" id="veronica-total">€ 0,00</div>
+            </div>
+            <div id="veronica-list"></div>
+          </div>
+
+          <!-- Colonna Lorenzo -->
+          <div class="column-box lorenzo-col">
+            <div class="column-header">
+              <div class="column-title">🧔 Lorenzo</div>
+              <div class="column-total" id="lorenzo-total">€ 0,00</div>
+            </div>
+            <div id="lorenzo-list"></div>
+          </div>
         </div>
-        <div id="tx-list"></div>
       </div>
 
-      <!-- VISTA 2: GRAFICI ANALISI -->
+      <!-- VISTA 2: GRAFICI -->
       <div id="view-stats" class="hidden">
         <div class="section-card">
-          <h3 style="font-size: 1rem; margin-bottom: 4px;">Ripartizione Spese</h3>
-          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 14px;">Spese divise per categoria per il mese selezionato.</p>
+          <h3 style="font-size: 1rem; margin-bottom: 4px;">Ripartizione Spese del Mese</h3>
+          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 14px;">Suddivisione per categoria del mese selezionato.</p>
           <div class="chart-box">
             <canvas id="categoryChart"></canvas>
           </div>
-          <div id="chart-empty-msg" class="hidden" style="text-align: center; color: var(--text-muted); padding: 30px 0; font-size: 0.85rem;">
+          <div id="chart-empty-msg" class="hidden empty-placeholder">
             Nessuna spesa registrata in questo mese.
           </div>
         </div>
       </div>
 
-      <!-- VISTA 3: EXPORT & AMMINISTRAZIONE -->
+      <!-- VISTA 3: EXPORT & ARCHIVIO -->
       <div id="view-admin" class="hidden">
         <div class="section-card">
-          <h3 style="font-size: 1rem; margin-bottom: 4px;">Gestione Dati & Backup</h3>
-          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">Scarica i conti su Excel o esporta tutto l'archivio.</p>
+          <h3 style="font-size: 1rem; margin-bottom: 4px;">Esportazione & Backup Excel</h3>
+          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">Scarica i conti in formato CSV compatibile con Excel.</p>
           
-          <div class="admin-action-box">
-            <button class="btn-admin" onclick="exportCSV(true)">
-              📊 Scarica Excel (Mese Corrente)
-            </button>
-            <button class="btn-admin" onclick="exportCSV(false)">
-              📁 Scarica Archivio Completo (Tutti i Mesi)
-            </button>
-          </div>
+          <button class="btn-admin" onclick="exportCSV(true)">
+            📊 Scarica Excel (Mese Selezionato)
+          </button>
+          <button class="btn-admin" onclick="exportCSV(false)">
+            📁 Scarica Tutto lo Storico (Tutti i Mesi)
+          </button>
         </div>
       </div>
 
     </div>
+
   </div>
 
   <script>
-    // --- CREDENZIALI SUPABASE ---
+    // --- SUPABASE CONFIG ---
     const SUPABASE_URL = 'https://zteofixorxwhjebuabqp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0ZW9maXhvcnh3aGplYnVhYnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTMzNDUsImV4cCI6MjEwNjA4OTM0NX0.V6Jr0bvLIcsLpqzHi_YZQl71bDMjFat761yHSxGb3d4';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // Emoji categorie
     const categoryIcons = {
-      'Spesa': '🛒', 'Bollette': '⚡', 'Casa': '🏠', 'Trasporti': '🚗',
-      'Svago': '🍕', 'Salute': '💊', 'Stipendio': '💵', 'Altro': '🎈'
+      'Spesa': '🛒',
+      'Bollette': '⚡',
+      'Casa': '🏠',
+      'Trasporti': '🚗',
+      'Svago': '🍕',
+      'Salute': '💊',
+      'Stipendio': '💵',
+      'Altro': '🎈'
     };
 
-    // Gestione Mese Selezionato
+    // Stato data selezionata (Anno, Mese 0-11)
     let currentDate = new Date();
+    let selectedYear = currentDate.getFullYear();
+    let selectedMonth = currentDate.getMonth();
+
+    // Cache transazioni
     let allTransactions = [];
     let myChart = null;
 
+    // Imposta data odierna nel form
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
 
-    function updateMonthLabel() {
-      const options = { month: 'long', year: 'numeric' };
-      document.getElementById('current-month-label').innerText = currentDate.toLocaleDateString('it-IT', options);
+    // Navigazione Mese
+    function updateMonthDisplay() {
+      const d = new Date(selectedYear, selectedMonth, 1);
+      const monthStr = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+      document.getElementById('current-month-label').innerText = monthStr;
     }
 
-    function changeMonth(delta) {
-      currentDate.setMonth(currentDate.getMonth() + delta);
-      updateMonthLabel();
-      filterAndRender();
+    function changeMonth(offset) {
+      selectedMonth += offset;
+      if (selectedMonth < 0) {
+        selectedMonth = 11;
+        selectedYear--;
+      } else if (selectedMonth > 11) {
+        selectedMonth = 0;
+        selectedYear++;
+      }
+      updateMonthDisplay();
+      renderCurrentMonth();
     }
 
+    // Navigazione Tab
     function switchTab(tab) {
-      ['home', 'stats', 'admin'].forEach(t => {
-        document.getElementById(`view-${t}`).classList.add('hidden');
-        document.getElementById(`tab-${t}`).classList.remove('active');
-      });
-      document.getElementById(`view-${tab}`).classList.remove('hidden');
-      document.getElementById(`tab-${tab}`).classList.add('active');
-      if (tab === 'stats') renderChart();
+      document.querySelectorAll('.btn-pill').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-home').classList.add('hidden');
+      document.getElementById('view-stats').classList.add('hidden');
+      document.getElementById('view-admin').classList.add('hidden');
+
+      if (tab === 'home') {
+        document.getElementById('tab-home').classList.add('active');
+        document.getElementById('view-home').classList.remove('hidden');
+      } else if (tab === 'stats') {
+        document.getElementById('tab-stats').classList.add('active');
+        document.getElementById('view-stats').classList.remove('hidden');
+        renderChart();
+      } else if (tab === 'admin') {
+        document.getElementById('tab-admin').classList.add('active');
+        document.getElementById('view-admin').classList.remove('hidden');
+      }
     }
 
+    // Autenticazione
     async function checkAuth() {
       const { data: { session } } = await client.auth.getSession();
       if (session) {
@@ -334,7 +457,7 @@
     function showApp() {
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('app-view').classList.remove('hidden');
-      updateMonthLabel();
+      updateMonthDisplay();
       loadTransactions();
     }
 
@@ -343,22 +466,21 @@
       document.getElementById('login-view').classList.remove('hidden');
     }
 
-    // Login
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
       const btn = document.getElementById('btn-login-text');
       const errEl = document.getElementById('login-error');
-
-      btn.innerText = 'Verifico...';
+      
+      btn.innerText = 'Verifico... ⏳';
       errEl.innerText = '';
 
       const { data, error } = await client.auth.signInWithPassword({ email, password });
       btn.innerText = 'Accedi 💕';
 
       if (error) {
-        errEl.innerText = 'Email o password errata.';
+        errEl.innerText = 'Ops! Email o password non corretta.';
       } else {
         showApp();
       }
@@ -369,7 +491,7 @@
       showLogin();
     }
 
-    // Fetch Dati
+    // Caricamento Dati
     async function loadTransactions() {
       const { data, error } = await client
         .from('family_expenses')
@@ -379,7 +501,7 @@
 
       if (!error) {
         allTransactions = data || [];
-        filterAndRender();
+        renderCurrentMonth();
       }
     }
 
@@ -387,115 +509,93 @@
       return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val);
     }
 
-    // Filtra per il mese selezionato
-    function filterAndRender() {
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-      const prefix = `${year}-${month}`;
+    // Render Uscite / Entrate e Colonne Veronica / Lorenzo
+    function renderCurrentMonth() {
+      const filtered = allTransactions.filter(tx => {
+        if (!tx.date) return false;
+        const [y, m] = tx.date.split('-').map(Number);
+        return y === selectedYear && (m - 1) === selectedMonth;
+      });
 
-      const filtered = allTransactions.filter(t => t.date.startsWith(prefix));
-      renderListAndTotals(filtered);
-      renderChart(filtered);
-    }
+      let totalIncome = 0;
+      let totalExpense = 0;
+      let veronicaNetExpense = 0;
+      let lorenzoNetExpense = 0;
 
-    function renderListAndTotals(transactions) {
-      let income = 0, expense = 0;
-      const listEl = document.getElementById('tx-list');
-      listEl.innerHTML = '';
-      document.getElementById('tx-count').innerText = `${transactions.length} voci`;
+      const veronicaList = document.getElementById('veronica-list');
+      const lorenzoList = document.getElementById('lorenzo-list');
+      veronicaList.innerHTML = '';
+      lorenzoList.innerHTML = '';
 
-      if (transactions.length === 0) {
-        listEl.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:0.85rem;">Nessun movimento in questo mese.</div>';
-      }
+      let countVeronica = 0;
+      let countLorenzo = 0;
 
-      transactions.forEach(tx => {
+      filtered.forEach(tx => {
         const val = Number(tx.amount);
-        if (tx.type === 'income') income += val;
-        if (tx.type === 'expense') expense += val;
-
         const isExp = tx.type === 'expense';
-        const icon = categoryIcons[tx.category] || '🎈';
-        const authorIcon = tx.author === 'Lui' ? '🧔' : '👩';
 
-        const item = document.createElement('div');
-        item.className = 'tx-item';
-        item.innerHTML = `
-          <div class="tx-left">
-            <div class="tx-icon">${icon}</div>
-            <div>
-              <div class="tx-cat">${tx.category} ${tx.description ? `<span style="font-weight:normal; color:var(--text-muted); font-size:0.8rem;">· ${tx.description}</span>` : ''}</div>
-              <div class="tx-meta">${tx.date} <span class="tx-badge">${authorIcon} ${tx.author}</span></div>
-            </div>
-          </div>
-          <div style="display:flex; align-items:center;">
-            <span class="tx-amount ${isExp ? 'val-expense' : 'val-income'}">
-              ${isExp ? '-' : '+'} ${formatCurrency(val)}
-            </span>
-            <button class="btn-del" onclick="deleteTx(${tx.id})">&times;</button>
-          </div>
-        `;
-        listEl.appendChild(item);
-      });
+        if (tx.type === 'income') totalIncome += val;
+        if (tx.type === 'expense') totalExpense += val;
 
-      document.getElementById('total-income').innerText = formatCurrency(income);
-      document.getElementById('total-expense').innerText = formatCurrency(expense);
-      document.getElementById('total-balance').innerText = formatCurrency(income - expense);
-    }
+        // Normalizzazione del nome autore (supporta vecchi record 'Lei'/'Lui')
+        const authorNormalized = (tx.author === 'Veronica' || tx.author === 'Lei') ? 'Veronica' : 'Lorenzo';
 
-    // Grafico a ciambella Chart.js
-    function renderChart(transactions) {
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-      const list = transactions || allTransactions.filter(t => t.date.startsWith(`${year}-${month}`));
-
-      const expenses = list.filter(t => t.type === 'expense');
-      const categoryTotals = {};
-      expenses.forEach(t => {
-        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + Number(t.amount);
-      });
-
-      const labels = Object.keys(categoryTotals);
-      const data = Object.values(categoryTotals);
-
-      const canvas = document.getElementById('categoryChart');
-      const emptyMsg = document.getElementById('chart-empty-msg');
-
-      if (labels.length === 0) {
-        canvas.style.display = 'none';
-        emptyMsg.classList.remove('hidden');
-        if (myChart) myChart.destroy();
-        return;
-      }
-
-      canvas.style.display = 'block';
-      emptyMsg.classList.add('hidden');
-
-      if (myChart) myChart.destroy();
-
-      const pastelColors = ['#ff8fab', '#ffd166', '#06d6a0', '#118ab2', '#8338ec', '#f78c6b', '#a2d2ff', '#b7b7a4'];
-
-      myChart = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: data,
-            backgroundColor: pastelColors.slice(0, labels.length),
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Nunito', size: 11 } } }
-          }
+        if (authorNormalized === 'Veronica') {
+          if (isExp) veronicaNetExpense += val;
+          countVeronica++;
+          veronicaList.appendChild(createTxElement(tx, isExp, val));
+        } else {
+          if (isExp) lorenzoNetExpense += val;
+          countLorenzo++;
+          lorenzoList.appendChild(createTxElement(tx, isExp, val));
         }
       });
+
+      if (countVeronica === 0) {
+        veronicaList.innerHTML = '<div class="empty-placeholder">Nessuna voce per Veronica</div>';
+      }
+      if (countLorenzo === 0) {
+        lorenzoList.innerHTML = '<div class="empty-placeholder">Nessuna voce per Lorenzo</div>';
+      }
+
+      // Aggiorna KPI generali
+      document.getElementById('total-income').innerText = formatCurrency(totalIncome);
+      document.getElementById('total-expense').innerText = formatCurrency(totalExpense);
+      document.getElementById('total-balance').innerText = formatCurrency(totalIncome - totalExpense);
+
+      // Aggiorna totali delle singole colonne
+      document.getElementById('veronica-total').innerText = 'Uscite: ' + formatCurrency(veronicaNetExpense);
+      document.getElementById('lorenzo-total').innerText = 'Uscite: ' + formatCurrency(lorenzoNetExpense);
+
+      // Aggiorna grafici se visibili
+      if (!document.getElementById('view-stats').classList.contains('hidden')) {
+        renderChart();
+      }
     }
 
-    // Aggiungi Movimento
+    function createTxElement(tx, isExp, val) {
+      const icon = categoryIcons[tx.category] || '🎈';
+      const item = document.createElement('div');
+      item.className = 'tx-item';
+      item.innerHTML = `
+        <div class="tx-left">
+          <div class="tx-icon">${icon}</div>
+          <div>
+            <div class="tx-cat">${tx.category} ${tx.description ? `<span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">· ${tx.description}</span>` : ''}</div>
+            <div class="tx-meta">${tx.date}</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+          <span class="tx-amount ${isExp ? 'val-expense' : 'val-income'}">
+            ${isExp ? '-' : '+'} ${formatCurrency(val)}
+          </span>
+          <button class="btn-del" onclick="deleteTx(${tx.id})">&times;</button>
+        </div>
+      `;
+      return item;
+    }
+
+    // Salva Movimento
     document.getElementById('tx-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-save');
@@ -516,6 +616,11 @@
       if (!error) {
         document.getElementById('amount').value = '';
         document.getElementById('description').value = '';
+        // Sposta visualizzazione sul mese della spesa inserita
+        const [y, m] = payload.date.split('-').map(Number);
+        selectedYear = y;
+        selectedMonth = m - 1;
+        updateMonthDisplay();
         loadTransactions();
       } else {
         alert('Errore nel salvataggio: ' + error.message);
@@ -524,46 +629,101 @@
 
     // Elimina Movimento
     async function deleteTx(id) {
-      if (!confirm('Eliminare questo movimento?')) return;
+      if (!confirm('Eliminare questa voce?')) return;
       const { error } = await client.from('family_expenses').delete().eq('id', id);
       if (!error) loadTransactions();
     }
 
-    // Esporta CSV per Excel
-    function exportCSV(onlyCurrentMonth) {
-      let list = allTransactions;
-      let filename = 'maledettisoldi_tutti_i_mesi.csv';
+    // Grafico a Ciambella
+    function renderChart() {
+      const filteredExpenses = allTransactions.filter(tx => {
+        if (tx.type !== 'expense' || !tx.date) return false;
+        const [y, m] = tx.date.split('-').map(Number);
+        return y === selectedYear && (m - 1) === selectedMonth;
+      });
 
-      if (onlyCurrentMonth) {
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-        list = allTransactions.filter(t => t.date.startsWith(`${year}-${month}`));
-        filename = `maledettisoldi_${year}_${month}.csv`;
-      }
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      const emptyMsg = document.getElementById('chart-empty-msg');
 
-      if (list.length === 0) {
-        alert('Nessun dato da esportare!');
+      if (filteredExpenses.length === 0) {
+        if (myChart) myChart.destroy();
+        emptyMsg.classList.remove('hidden');
         return;
       }
 
-      let csvContent = 'Data;Tipo;Categoria;Importo (€);Autore;Nota\n';
-      list.forEach(tx => {
-        const row = [
-          tx.date,
-          tx.type === 'expense' ? 'Uscita' : 'Entrata',
-          `"${tx.category}"`,
-          Number(tx.amount).toFixed(2).replace('.', ','),
-          `"${tx.author}"`,
-          `"${(tx.description || '').replace(/"/g, '""')}"`
-        ];
-        csvContent += row.join(';') + '\n';
+      emptyMsg.classList.add('hidden');
+
+      const catTotals = {};
+      filteredExpenses.forEach(tx => {
+        catTotals[tx.category] = (catTotals[tx.category] || 0) + Number(tx.amount);
       });
 
-      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+      const labels = Object.keys(catTotals);
+      const data = Object.values(catTotals);
+      const colors = ['#f3722c', '#f8961e', '#f9c74f', '#90be6d', '#43aa8b', '#577590', '#f9844a', '#b5179e'];
+
+      if (myChart) myChart.destroy();
+
+      myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Nunito', size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: function(item) {
+                  return ` ${item.label}: € ${item.raw.toFixed(2)}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Esportazione CSV / Excel
+    function exportCSV(onlyCurrentMonth) {
+      let rowsToExport = allTransactions;
+      let fileName = 'maledetti_soldi_tutto.csv';
+
+      if (onlyCurrentMonth) {
+        rowsToExport = allTransactions.filter(tx => {
+          if (!tx.date) return false;
+          const [y, m] = tx.date.split('-').map(Number);
+          return y === selectedYear && (m - 1) === selectedMonth;
+        });
+        fileName = `maledetti_soldi_${selectedYear}_${selectedMonth + 1}.csv`;
+      }
+
+      if (rowsToExport.length === 0) {
+        alert('Nessun movimento da esportare per questo periodo!');
+        return;
+      }
+
+      let csvContent = '\uFEFF'; // BOM UTF-8 per accenti in Excel
+      csvContent += 'Data;Tipo;Categoria;Importo;Autore;Nota\n';
+
+      rowsToExport.forEach(r => {
+        const typeStr = r.type === 'expense' ? 'Uscita' : 'Entrata';
+        const authorStr = (r.author === 'Lei' ? 'Veronica' : (r.author === 'Lui' ? 'Lorenzo' : r.author));
+        const cleanDesc = (r.description || '').replace(/;/g, ',');
+        csvContent += `${r.date};${typeStr};${r.category};${Number(r.amount).toFixed(2)};${authorStr};${cleanDesc}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
