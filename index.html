@@ -1,735 +1,179 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MaledettiSoldi 💸</title>
-
-  <!-- PWA & Icone -->
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" href="icon-192.png" />
-  <link rel="apple-touch-icon" href="icon-512.png" />
-  <meta name="theme-color" content="#fbb1bd" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-
-  <!-- Font carini e leggibili -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Supabase CDN & Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    :root {
-      --bg: #fcf8f5;
-      --card-bg: #ffffff;
-      --border: #f0e4dc;
-      --text: #413534;
-      --text-muted: #958582;
-      --income: #2cb67d;
-      --income-bg: #e8f8f2;
-      --expense: #e63946;
-      --expense-bg: #ffebee;
-      --primary: #fbb1bd;
-      --primary-dark: #f28482;
-      --veronica: #9d4edd;
-      --veronica-bg: #f5edfc;
-      --veronica-border: #e2cbf8;
-      --lorenzo: #0077b6;
-      --lorenzo-bg: #edf6fc;
-      --lorenzo-border: #cae6f8;
-      --radius: 18px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 12px; display: flex; justify-content: center; min-height: 100vh; }
-    .container { width: 100%; max-width: 860px; }
-    .hidden { display: none !important; }
-
-    h1, h2, h3 { font-family: 'Comfortaa', cursive; color: #372a29; }
-
-    /* Header Nav */
-    .app-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 12px; padding: 6px 4px;
-    }
-    .app-title { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .nav-actions { display: flex; gap: 6px; }
-    .btn-pill {
-      background: #f3eae3; border: none; color: #6d5b58; padding: 6px 12px;
-      border-radius: 20px; font-weight: 700; font-size: 0.78rem; cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-pill.active { background: var(--primary-dark); color: white; }
-
-    /* Barra navigazione Mese */
-    .month-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      background: var(--card-bg); border: 1.5px solid var(--border);
-      border-radius: var(--radius); padding: 8px 14px; margin-bottom: 14px;
-    }
-    .month-btn {
-      background: #fbf0e8; border: none; font-size: 1rem; color: #846f6b;
-      cursor: pointer; padding: 4px 12px; border-radius: 10px; font-weight: 700;
-    }
-    .month-title { font-size: 1rem; font-weight: 800; font-family: 'Comfortaa', cursive; text-transform: capitalize; }
-
-    /* Saldi Totali */
-    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-    .card { background: var(--card-bg); border-radius: 14px; padding: 10px 8px; text-align: center; border: 1.5px solid var(--border); }
-    .card span { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
-    .card strong { font-size: 1.05rem; display: block; margin-top: 3px; }
-    .val-income { color: var(--income); }
-    .val-expense { color: var(--expense); }
-    .val-balance { color: #3a86ff; }
-
-    /* Form & Sezioni */
-    .section-card {
-      background: var(--card-bg); border-radius: var(--radius); padding: 16px;
-      margin-bottom: 16px; border: 1.5px solid var(--border);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.02);
-    }
-    .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-left: 2px; }
-    input, select {
-      background: #faf4ee; border: 1.5px solid #ebdcd0; border-radius: 12px;
-      color: var(--text); padding: 10px; font-size: 0.9rem; outline: none; width: 100%;
-    }
-    input:focus, select:focus { border-color: var(--primary-dark); background: #fff; }
-    .btn-submit {
-      width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white; border: none; border-radius: 14px; padding: 12px; font-size: 0.98rem;
-      font-weight: 800; cursor: pointer; margin-top: 4px;
-    }
-
-    /* Griglia a Due Colonne: Veronica & Lorenzo */
-    .columns-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 8px;
-    }
-
-    @media (max-width: 600px) {
-      .columns-container {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .column-box {
-      background: #ffffff;
-      border-radius: var(--radius);
-      border: 1.5px solid var(--border);
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .column-box.veronica-col {
-      border-color: var(--veronica-border);
-      background: linear-gradient(180deg, var(--veronica-bg) 0%, #ffffff 120px);
-    }
-
-    .column-box.lorenzo-col {
-      border-color: var(--lorenzo-border);
-      background: linear-gradient(180deg, var(--lorenzo-bg) 0%, #ffffff 120px);
-    }
-
-    .column-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 1px dashed rgba(0,0,0,0.08);
-    }
-
-    .column-title {
-      font-size: 0.98rem;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .veronica-col .column-title { color: var(--veronica); }
-    .lorenzo-col .column-title { color: var(--lorenzo); }
-
-    .column-total {
-      font-size: 0.85rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 8px;
-    }
-
-    .veronica-col .column-total { background: #ecd9fa; color: var(--veronica); }
-    .lorenzo-col .column-total { background: #d7eefc; color: var(--lorenzo); }
-
-    /* Singola voce di spesa */
-    .tx-item {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #ffffff; border-radius: 12px; padding: 9px 10px; margin-bottom: 7px;
-      border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    }
-    .tx-left { display: flex; align-items: center; gap: 8px; }
-    .tx-icon {
-      font-size: 1.25rem; width: 34px; height: 34px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; background: #fff5f2;
-    }
-    .tx-cat { font-weight: 700; font-size: 0.88rem; }
-    .tx-meta { font-size: 0.72rem; color: var(--text-muted); }
-    .tx-amount { font-weight: 800; font-size: 0.92rem; white-space: nowrap; }
-    .btn-del { background: transparent; border: none; color: #cfbeba; font-size: 1.15rem; cursor: pointer; padding: 0 2px; margin-left: 6px; }
-    .btn-del:hover { color: var(--expense); }
-
-    .empty-placeholder {
-      text-align: center; color: var(--text-muted); font-size: 0.8rem;
-      padding: 24px 8px; font-style: italic;
-    }
-
-    /* Tab Grafici & Admin */
-    .chart-box { max-width: 340px; margin: 0 auto 14px auto; }
-    .btn-admin {
-      width: 100%; background: #fbf3ec; border: 1.5px solid #ebdcd0;
-      color: #634f4b; border-radius: 12px; padding: 12px; font-weight: 700;
-      font-size: 0.88rem; cursor: pointer; margin-bottom: 10px; display: flex;
-      align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-admin:hover { background: #f7e6d9; }
-  </style>
-</head>
-<body>
-  <div class="container">
-
-    <!-- LOGIN -->
-    <div id="login-view" style="margin-top: 60px; text-align: center; max-width: 420px; margin-left: auto; margin-right: auto;">
-      <div class="section-card">
-        <div style="font-size: 3.5rem; margin-bottom: 8px;">🐷💸</div>
-        <h2 style="font-size: 1.4rem; margin-bottom: 4px;">MaledettiSoldi</h2>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px;">I conti di casa in armonia</p>
-        <form id="login-form">
-          <div class="form-group" style="text-align: left;">
-            <label for="login-email">Email</label>
-            <input type="email" id="login-email" placeholder="famiglia@casa.it" required />
-          </div>
-          <div class="form-group" style="text-align: left;">
-            <label for="login-password">Password</label>
-            <input type="password" id="login-password" placeholder="••••••••" required />
-          </div>
-          <button type="submit" class="btn-submit" id="btn-login-text" style="margin-top: 8px;">Accedi 💕</button>
-          <div id="login-error" style="color: var(--expense); font-size: 0.85rem; margin-top: 10px;"></div>
-        </form>
+<!-- LOGIN -->
+<div id="login-view" style="margin-top: 50px; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto;">
+  <div class="section-card">
+    <div style="font-size: 3.5rem; margin-bottom: 8px;">🐷💸</div>
+    <h2 style="font-size: 1.4rem; margin-bottom: 4px;">MaledettiSoldi</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px;">I conti di casa in armonia</p>
+    <form id="login-form">
+      <div class="form-group" style="text-align: left;">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" placeholder="famiglia@casa.it" required />
       </div>
+      <div class="form-group" style="text-align: left;">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn-submit" id="btn-login-text">Accedi 💕</button>
+      <div id="login-error" style="color: var(--expense); font-size: 0.85rem; margin-top: 10px;"></div>
+    </form>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-view" class="hidden">
+  <!-- Intestazione -->
+  <div class="app-header">
+    <div class="app-title">🐷 MaledettiSoldi</div>
+    <div class="nav-actions">
+      <button class="btn-pill active" id="tab-home" onclick="switchTab('home')">Spese</button>
+      <button class="btn-pill" id="tab-stats" onclick="switchTab('stats')">Grafici</button>
+      <button class="btn-pill" id="tab-admin" onclick="switchTab('admin')">Export</button>
+      <button class="btn-pill" onclick="logout()">Esci</button>
     </div>
-
-    <!-- MAIN APP -->
-    <div id="app-view" class="hidden">
-      <!-- Intestazione e Navigazione -->
-      <div class="app-header">
-        <div class="app-title">🐷 MaledettiSoldi</div>
-        <div class="nav-actions">
-          <button class="btn-pill active" id="tab-home" onclick="switchTab('home')">Spese</button>
-          <button class="btn-pill" id="tab-stats" onclick="switchTab('stats')">Grafici</button>
-          <button class="btn-pill" id="tab-admin" onclick="switchTab('admin')">Export</button>
-          <button class="btn-pill" onclick="logout()">Esci</button>
-        </div>
-      </div>
-
-      <!-- Barra Mese Corrente -->
-      <div class="month-bar">
-        <button class="month-btn" onclick="changeMonth(-1)">◀</button>
-        <div class="month-title" id="current-month-label">Caricamento...</div>
-        <button class="month-btn" onclick="changeMonth(1)">▶</button>
-      </div>
-
-      <!-- VISTA 1: SPESE & DUE COLONNE -->
-      <div id="view-home">
-        <!-- Saldi Mensili Generali -->
-        <div class="summary-grid">
-          <div class="card" style="background: var(--income-bg); border-color: #ccefe9;">
-            <span>Entrate</span>
-            <strong id="total-income" class="val-income">€ 0,00</strong>
-          </div>
-          <div class="card" style="background: var(--expense-bg); border-color: #fbd6cc;">
-            <span>Uscite</span>
-            <strong id="total-expense" class="val-expense">€ 0,00</strong>
-          </div>
-          <div class="card" style="background: #eef2ff; border-color: #dbe4ff;">
-            <span>Saldo</span>
-            <strong id="total-balance" class="val-balance">€ 0,00</strong>
-          </div>
-        </div>
-
-        <!-- Form Nuova Voce -->
-        <div class="section-card">
-          <form id="tx-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="type">Direzione</label>
-                <select id="type" required>
-                  <option value="expense">💸 Uscita</option>
-                  <option value="income">💰 Entrata</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="amount">Importo (€)</label>
-                <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="category">Categoria</label>
-                <select id="category" required>
-                  <option value="Spesa">🛒 Spesa</option>
-                  <option value="Bollette">⚡ Bollette</option>
-                  <option value="Casa">🏠 Casa & Mutuo</option>
-                  <option value="Trasporti">🚗 Auto & Trasporti</option>
-                  <option value="Svago">🍕 Cene & Svago</option>
-                  <option value="Salute">💊 Salute & Famiglia</option>
-                  <option value="Stipendio">💵 Stipendio</option>
-                  <option value="Altro">🎈 Altro</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="author">Chi Spende?</label>
-                <select id="author" required>
-                  <option value="Veronica">👩 Veronica</option>
-                  <option value="Lorenzo">🧔 Lorenzo</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="date">Data</label>
-                <input type="date" id="date" required />
-              </div>
-              <div class="form-group">
-                <label for="description">Nota</label>
-                <input type="text" id="description" placeholder="Es. Conad, Enel..." />
-              </div>
-            </div>
-
-            <button type="submit" class="btn-submit" id="btn-save">+ Salva Movimento ✨</button>
-          </form>
-        </div>
-
-        <!-- DUE COLONNE: VERONICA E LORENZO -->
-        <div class="columns-container">
-          <!-- Colonna Veronica -->
-          <div class="column-box veronica-col">
-            <div class="column-header">
-              <div class="column-title">👩 Veronica</div>
-              <div class="column-total" id="veronica-total">€ 0,00</div>
-            </div>
-            <div id="veronica-list"></div>
-          </div>
-
-          <!-- Colonna Lorenzo -->
-          <div class="column-box lorenzo-col">
-            <div class="column-header">
-              <div class="column-title">🧔 Lorenzo</div>
-              <div class="column-total" id="lorenzo-total">€ 0,00</div>
-            </div>
-            <div id="lorenzo-list"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- VISTA 2: GRAFICI -->
-      <div id="view-stats" class="hidden">
-        <div class="section-card">
-          <h3 style="font-size: 1rem; margin-bottom: 4px;">Ripartizione Spese del Mese</h3>
-          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 14px;">Suddivisione per categoria del mese selezionato.</p>
-          <div class="chart-box">
-            <canvas id="categoryChart"></canvas>
-          </div>
-          <div id="chart-empty-msg" class="hidden empty-placeholder">
-            Nessuna spesa registrata in questo mese.
-          </div>
-        </div>
-      </div>
-
-      <!-- VISTA 3: EXPORT & ARCHIVIO -->
-      <div id="view-admin" class="hidden">
-        <div class="section-card">
-          <h3 style="font-size: 1rem; margin-bottom: 4px;">Esportazione & Backup Excel</h3>
-          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">Scarica i conti in formato CSV compatibile con Excel.</p>
-          
-          <button class="btn-admin" onclick="exportCSV(true)">
-            📊 Scarica Excel (Mese Selezionato)
-          </button>
-          <button class="btn-admin" onclick="exportCSV(false)">
-            📁 Scarica Tutto lo Storico (Tutti i Mesi)
-          </button>
-        </div>
-      </div>
-
-    </div>
-
   </div>
 
-  <script>
-    // --- SUPABASE CONFIG ---
-    const SUPABASE_URL = 'https://zteofixorxwhjebuabqp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0ZW9maXhvcnh3aGplYnVhYnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTMzNDUsImV4cCI6MjEwNjA4OTM0NX0.V6Jr0bvLIcsLpqzHi_YZQl71bDMjFat761yHSxGb3d4';
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <!-- Barra Selettore Mese -->
+  <div class="month-bar">
+    <button class="month-btn" onclick="changeMonth(-1)">◀</button>
+    <div class="month-title" id="current-month-label">Caricamento...</div>
+    <button class="month-btn" onclick="changeMonth(1)">▶</button>
+  </div>
 
-    // Emoji categorie
-    const categoryIcons = {
-      'Spesa': '🛒',
-      'Bollette': '⚡',
-      'Casa': '🏠',
-      'Trasporti': '🚗',
-      'Svago': '🍕',
-      'Salute': '💊',
-      'Stipendio': '💵',
-      'Altro': '🎈'
-    };
+  <!-- VISTA 1: SPESE & DUE COLONNE -->
+  <div id="view-home">
+    
+    <!-- Banner Riporto Mese Precedente -->
+    <div class="carryover-banner">
+      <div>
+        <span>Riporto dai mesi precedenti:</span>
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">(Entrate passate - Spese passate)</div>
+      </div>
+      <strong id="carryover-val">€ 0,00</strong>
+    </div>
 
-    // Stato data selezionata (Anno, Mese 0-11)
-    let currentDate = new Date();
-    let selectedYear = currentDate.getFullYear();
-    let selectedMonth = currentDate.getMonth();
+    <!-- Riepilogo con Totale Mensile + Giacenza Totale Reale -->
+    <div class="summary-grid">
+      <div class="card" style="background: var(--income-bg); border-color: #ccefe9;">
+        <span>Entrate Mese</span>
+        <strong id="total-income" class="val-income">€ 0,00</strong>
+        <small id="income-prev-note"></small>
+      </div>
+      <div class="card" style="background: var(--expense-bg); border-color: #fbd6cc;">
+        <span>Uscite Mese</span>
+        <strong id="total-expense" class="val-expense">€ 0,00</strong>
+        <small id="expense-prev-note"></small>
+      </div>
+      <div class="card" style="background: #eef2ff; border-color: #dbe4ff;">
+        <span>Disponibilità</span>
+        <strong id="total-balance" class="val-balance">€ 0,00</strong>
+        <small id="balance-badge">Mese + Riporto</small>
+      </div>
+    </div>
 
-    // Cache transazioni
-    let allTransactions = [];
-    let myChart = null;
-
-    // Imposta data odierna nel form
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
-
-    // Navigazione Mese
-    function updateMonthDisplay() {
-      const d = new Date(selectedYear, selectedMonth, 1);
-      const monthStr = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-      document.getElementById('current-month-label').innerText = monthStr;
-    }
-
-    function changeMonth(offset) {
-      selectedMonth += offset;
-      if (selectedMonth < 0) {
-        selectedMonth = 11;
-        selectedYear--;
-      } else if (selectedMonth > 11) {
-        selectedMonth = 0;
-        selectedYear++;
-      }
-      updateMonthDisplay();
-      renderCurrentMonth();
-    }
-
-    // Navigazione Tab
-    function switchTab(tab) {
-      document.querySelectorAll('.btn-pill').forEach(b => b.classList.remove('active'));
-      document.getElementById('view-home').classList.add('hidden');
-      document.getElementById('view-stats').classList.add('hidden');
-      document.getElementById('view-admin').classList.add('hidden');
-
-      if (tab === 'home') {
-        document.getElementById('tab-home').classList.add('active');
-        document.getElementById('view-home').classList.remove('hidden');
-      } else if (tab === 'stats') {
-        document.getElementById('tab-stats').classList.add('active');
-        document.getElementById('view-stats').classList.remove('hidden');
-        renderChart();
-      } else if (tab === 'admin') {
-        document.getElementById('tab-admin').classList.add('active');
-        document.getElementById('view-admin').classList.remove('hidden');
-      }
-    }
-
-    // Autenticazione
-    async function checkAuth() {
-      const { data: { session } } = await client.auth.getSession();
-      if (session) {
-        showApp();
-      } else {
-        showLogin();
-      }
-    }
-
-    function showApp() {
-      document.getElementById('login-view').classList.add('hidden');
-      document.getElementById('app-view').classList.remove('hidden');
-      updateMonthDisplay();
-      loadTransactions();
-    }
-
-    function showLogin() {
-      document.getElementById('app-view').classList.add('hidden');
-      document.getElementById('login-view').classList.remove('hidden');
-    }
-
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      const btn = document.getElementById('btn-login-text');
-      const errEl = document.getElementById('login-error');
-      
-      btn.innerText = 'Verifico... ⏳';
-      errEl.innerText = '';
-
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-      btn.innerText = 'Accedi 💕';
-
-      if (error) {
-        errEl.innerText = 'Ops! Email o password non corretta.';
-      } else {
-        showApp();
-      }
-    });
-
-    async function logout() {
-      await client.auth.signOut();
-      showLogin();
-    }
-
-    // Caricamento Dati
-    async function loadTransactions() {
-      const { data, error } = await client
-        .from('family_expenses')
-        .select('*')
-        .order('date', { ascending: false })
-        .order('id', { ascending: false });
-
-      if (!error) {
-        allTransactions = data || [];
-        renderCurrentMonth();
-      }
-    }
-
-    function formatCurrency(val) {
-      return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val);
-    }
-
-    // Render Uscite / Entrate e Colonne Veronica / Lorenzo
-    function renderCurrentMonth() {
-      const filtered = allTransactions.filter(tx => {
-        if (!tx.date) return false;
-        const [y, m] = tx.date.split('-').map(Number);
-        return y === selectedYear && (m - 1) === selectedMonth;
-      });
-
-      let totalIncome = 0;
-      let totalExpense = 0;
-      let veronicaNetExpense = 0;
-      let lorenzoNetExpense = 0;
-
-      const veronicaList = document.getElementById('veronica-list');
-      const lorenzoList = document.getElementById('lorenzo-list');
-      veronicaList.innerHTML = '';
-      lorenzoList.innerHTML = '';
-
-      let countVeronica = 0;
-      let countLorenzo = 0;
-
-      filtered.forEach(tx => {
-        const val = Number(tx.amount);
-        const isExp = tx.type === 'expense';
-
-        if (tx.type === 'income') totalIncome += val;
-        if (tx.type === 'expense') totalExpense += val;
-
-        // Normalizzazione del nome autore (supporta vecchi record 'Lei'/'Lui')
-        const authorNormalized = (tx.author === 'Veronica' || tx.author === 'Lei') ? 'Veronica' : 'Lorenzo';
-
-        if (authorNormalized === 'Veronica') {
-          if (isExp) veronicaNetExpense += val;
-          countVeronica++;
-          veronicaList.appendChild(createTxElement(tx, isExp, val));
-        } else {
-          if (isExp) lorenzoNetExpense += val;
-          countLorenzo++;
-          lorenzoList.appendChild(createTxElement(tx, isExp, val));
-        }
-      });
-
-      if (countVeronica === 0) {
-        veronicaList.innerHTML = '<div class="empty-placeholder">Nessuna voce per Veronica</div>';
-      }
-      if (countLorenzo === 0) {
-        lorenzoList.innerHTML = '<div class="empty-placeholder">Nessuna voce per Lorenzo</div>';
-      }
-
-      // Aggiorna KPI generali
-      document.getElementById('total-income').innerText = formatCurrency(totalIncome);
-      document.getElementById('total-expense').innerText = formatCurrency(totalExpense);
-      document.getElementById('total-balance').innerText = formatCurrency(totalIncome - totalExpense);
-
-      // Aggiorna totali delle singole colonne
-      document.getElementById('veronica-total').innerText = 'Uscite: ' + formatCurrency(veronicaNetExpense);
-      document.getElementById('lorenzo-total').innerText = 'Uscite: ' + formatCurrency(lorenzoNetExpense);
-
-      // Aggiorna grafici se visibili
-      if (!document.getElementById('view-stats').classList.contains('hidden')) {
-        renderChart();
-      }
-    }
-
-    function createTxElement(tx, isExp, val) {
-      const icon = categoryIcons[tx.category] || '🎈';
-      const item = document.createElement('div');
-      item.className = 'tx-item';
-      item.innerHTML = `
-        <div class="tx-left">
-          <div class="tx-icon">${icon}</div>
-          <div>
-            <div class="tx-cat">${tx.category} ${tx.description ? `<span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">· ${tx.description}</span>` : ''}</div>
-            <div class="tx-meta">${tx.date}</div>
+    <!-- Form Nuova Voce -->
+    <div class="section-card">
+      <form id="tx-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="type">Direzione</label>
+            <select id="type" required>
+              <option value="expense">💸 Uscita</option>
+              <option value="income">💰 Entrata (Stipendio/Extra)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="amount">Importo (€)</label>
+            <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required />
           </div>
         </div>
-        <div style="display:flex; align-items:center;">
-          <span class="tx-amount ${isExp ? 'val-expense' : 'val-income'}">
-            ${isExp ? '-' : '+'} ${formatCurrency(val)}
-          </span>
-          <button class="btn-del" onclick="deleteTx(${tx.id})">&times;</button>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">Categoria</label>
+            <select id="category" required>
+              <option value="Spesa">🛒 Spesa Alimentare</option>
+              <option value="Bollette">⚡ Bollette & Utenze</option>
+              <option value="Casa">🏠 Casa & Mutuo</option>
+              <option value="Trasporti">🚗 Auto & Carburante</option>
+              <option value="Svago">🍕 Cene & Svago</option>
+              <option value="Salute">💊 Salute & Famiglia</option>
+              <option value="Stipendio">💵 Stipendio</option>
+              <option value="Altro">🎈 Altro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="author">Chi?</label>
+            <select id="author" required>
+              <option value="Veronica">👩 Veronica</option>
+              <option value="Lorenzo">🧔 Lorenzo</option>
+            </select>
+          </div>
         </div>
-      `;
-      return item;
-    }
 
-    // Salva Movimento
-    document.getElementById('tx-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('btn-save');
-      btn.disabled = true;
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date">Data</label>
+            <input type="date" id="date" required />
+          </div>
+          <div class="form-group">
+            <label for="description">Nota (opzionale)</label>
+            <input type="text" id="description" placeholder="Es. Conad, Enel..." />
+          </div>
+        </div>
 
-      const payload = {
-        type: document.getElementById('type').value,
-        amount: parseFloat(document.getElementById('amount').value),
-        category: document.getElementById('category').value,
-        author: document.getElementById('author').value,
-        date: document.getElementById('date').value,
-        description: document.getElementById('description').value.trim()
-      };
+        <button type="submit" class="btn-submit" id="btn-save">+ Salva Movimento ✨</button>
+      </form>
+    </div>
 
-      const { error } = await client.from('family_expenses').insert([payload]);
-      btn.disabled = false;
+    <!-- DUE COLONNE: VERONICA E LORENZO -->
+    <div class="columns-container">
+      <!-- Colonna Veronica -->
+      <div class="column-box veronica-col">
+        <div class="column-header">
+          <div class="column-title">👩 Veronica</div>
+          <div class="column-total" id="veronica-total">€ 0,00</div>
+        </div>
+        <div id="veronica-list"></div>
+      </div>
 
-      if (!error) {
-        document.getElementById('amount').value = '';
-        document.getElementById('description').value = '';
-        // Sposta visualizzazione sul mese della spesa inserita
-        const [y, m] = payload.date.split('-').map(Number);
-        selectedYear = y;
-        selectedMonth = m - 1;
-        updateMonthDisplay();
-        loadTransactions();
-      } else {
-        alert('Errore nel salvataggio: ' + error.message);
-      }
-    });
+      <!-- Colonna Lorenzo -->
+      <div class="column-box lorenzo-col">
+        <div class="column-header">
+          <div class="column-title">🧔 Lorenzo</div>
+          <div class="column-total" id="lorenzo-total">€ 0,00</div>
+        </div>
+        <div id="lorenzo-list"></div>
+      </div>
+    </div>
+  </div>
 
-    // Elimina Movimento
-    async function deleteTx(id) {
-      if (!confirm('Eliminare questa voce?')) return;
-      const { error } = await client.from('family_expenses').delete().eq('id', id);
-      if (!error) loadTransactions();
-    }
+  <!-- VISTA 2: GRAFICI -->
+  <div id="view-stats" class="hidden">
+    <div class="section-card">
+      <h3 style="font-size: 0.95rem; margin-bottom: 4px;">Ripartizione Spese del Mese</h3>
+      <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 12px;">Categorie uscite del mese visualizzato.</p>
+      <div class="chart-box">
+        <canvas id="categoryChart"></canvas>
+      </div>
+      <div id="chart-empty-msg" class="hidden empty-placeholder">
+        Nessuna spesa registrata in questo mese.
+      </div>
+    </div>
+  </div>
 
-    // Grafico a Ciambella
-    function renderChart() {
-      const filteredExpenses = allTransactions.filter(tx => {
-        if (tx.type !== 'expense' || !tx.date) return false;
-        const [y, m] = tx.date.split('-').map(Number);
-        return y === selectedYear && (m - 1) === selectedMonth;
-      });
+  <!-- VISTA 3: EXPORT & ARCHIVIO -->
+  <div id="view-admin" class="hidden">
+    <div class="section-card">
+      <h3 style="font-size: 0.95rem; margin-bottom: 4px;">Esportazione & Backup Excel</h3>
+      <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 14px;">Scarica tutti i dati in un file CSV compatibile con Excel.</p>
+      
+      <button class="btn-admin" onclick="exportCSV(true)">
+        📊 Scarica Excel (Mese Visualizzato)
+      </button>
+      <button class="btn-admin" onclick="exportCSV(false)">
+        📁 Scarica Tutto lo Storico (Dall'Inizio)
+      </button>
+    </div>
+  </div>
 
-      const ctx = document.getElementById('categoryChart').getContext('2d');
-      const emptyMsg = document.getElementById('chart-empty-msg');
-
-      if (filteredExpenses.length === 0) {
-        if (myChart) myChart.destroy();
-        emptyMsg.classList.remove('hidden');
-        return;
-      }
-
-      emptyMsg.classList.add('hidden');
-
-      const catTotals = {};
-      filteredExpenses.forEach(tx => {
-        catTotals[tx.category] = (catTotals[tx.category] || 0) + Number(tx.amount);
-      });
-
-      const labels = Object.keys(catTotals);
-      const data = Object.values(catTotals);
-      const colors = ['#f3722c', '#f8961e', '#f9c74f', '#90be6d', '#43aa8b', '#577590', '#f9844a', '#b5179e'];
-
-      if (myChart) myChart.destroy();
-
-      myChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: data,
-            backgroundColor: colors.slice(0, labels.length),
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Nunito', size: 11 } } },
-            tooltip: {
-              callbacks: {
-                label: function(item) {
-                  return ` ${item.label}: € ${item.raw.toFixed(2)}`;
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-
-    // Esportazione CSV / Excel
-    function exportCSV(onlyCurrentMonth) {
-      let rowsToExport = allTransactions;
-      let fileName = 'maledetti_soldi_tutto.csv';
-
-      if (onlyCurrentMonth) {
-        rowsToExport = allTransactions.filter(tx => {
-          if (!tx.date) return false;
-          const [y, m] = tx.date.split('-').map(Number);
-          return y === selectedYear && (m - 1) === selectedMonth;
-        });
-        fileName = `maledetti_soldi_${selectedYear}_${selectedMonth + 1}.csv`;
-      }
-
-      if (rowsToExport.length === 0) {
-        alert('Nessun movimento da esportare per questo periodo!');
-        return;
-      }
-
-      let csvContent = '\uFEFF'; // BOM UTF-8 per accenti in Excel
-      csvContent += 'Data;Tipo;Categoria;Importo;Autore;Nota\n';
-
-      rowsToExport.forEach(r => {
-        const typeStr = r.type === 'expense' ? 'Uscita' : 'Entrata';
-        const authorStr = (r.author === 'Lei' ? 'Veronica' : (r.author === 'Lui' ? 'Lorenzo' : r.author));
-        const cleanDesc = (r.description || '').replace(/;/g, ',');
-        csvContent += `${r.date};${typeStr};${r.category};${Number(r.amount).toFixed(2)};${authorStr};${cleanDesc}\n`;
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    checkAuth();
-  </script>
-</body>
-</html>
+</div>
