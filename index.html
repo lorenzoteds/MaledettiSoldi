@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MaledettiSoldi 💸</title>
+  
+  <!-- Icone Web & PWA -->
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#fff8f3" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg: #fff8f3;
+      --card-bg: #ffffff;
+      --border: #f0e4d8;
+      --text: #4a3e3d;
+      --text-muted: #9c8e8c;
+      --income: #2cb67d;
+      --income-bg: #eafaf1;
+      --expense: #ff6b6b;
+      --expense-bg: #fff0f0;
+      --primary: #ff8fab;
+      --primary-dark: #fb6f92;
+      --accent: #ffd166;
+      --shadow: 0 10px 25px rgba(255, 143, 171, 0.12);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Comfortaa', cursive;
+      color: #3d3130;
+    }
+
+    /* Schermata Login */
+    .login-container {
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 32px 24px;
+      box-shadow: var(--shadow);
+      border: 2px solid var(--border);
+    }
+
+    .app-icon-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
+      object-fit: cover;
+    }
+
+    /* Header Principale */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .app-title {
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+
+    .app-header-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .btn-logout {
+      background: #fdf2e9;
+      border: 1.5px solid #fae1cd;
+      color: #a07865;
+      padding: 7px 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transition: background 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: #f8dfcb;
+    }
+
+    /* Griglia Riepilogo */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      border-radius: 16px;
+      padding: 12px 6px;
+      text-align: center;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg);
+    }
+
+    .card span {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card strong {
+      font-size: 1.05rem;
+      display: block;
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+
+    .val-income { color: var(--income); }
+    .val-expense { color: var(--expense); }
+    .val-balance { color: #4361ee; }
+
+    /* Form Inserimento */
+    .form-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+      border: 2px solid var(--border);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    input, select {
+      background: #faf6f0;
+      border: 1.5px solid #ebdcd0;
+      border-radius: 14px;
+      color: var(--text);
+      padding: 11px 12px;
+      font-size: 0.95rem;
+      outline: none;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      border-radius: 16px;
+      padding: 13px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(251, 111, 146, 0.3);
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Lista Movimenti */
+    .tx-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      border: 1.5px solid var(--border);
+    }
+
+    .tx-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tx-icon {
+      font-size: 1.5rem;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff3f5;
+      flex-shrink: 0;
+    }
+
+    .tx-cat {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .tx-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tx-badge {
+      display: inline-block;
+      background: #f1ece6;
+      padding: 2px 7px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.7rem;
+      color: #655654;
+    }
+
+    .tx-amount {
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .btn-del {
+      background: transparent;
+      border: none;
+      color: #cdbeb7;
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 0 4px;
+      margin-left: 6px;
+      line-height: 1;
+    }
+
+    .btn-del:hover {
+      color: var(--expense);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- SCHERMATA LOGIN -->
+    <div id="login-view" class="login-container">
+      <div class="login-card">
+        <img src="icon.png" alt="MaledettiSoldi" class="app-icon-img" onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');" />
+        <div id="logo-fallback" class="hidden" style="font-size: 3rem; margin-bottom: 8px;">🐷💸</div>
+        
+        <h2>MaledettiSoldi</h2>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 20px 0;">I conti di famiglia in armonia</p>
+        
+        <form id="login-form">
+          <div class="form-group" style="text-align: left;">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" placeholder="famiglia@casa.it" required />
+          </div>
+          <div class="form-group" style="text-align: left;">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn-submit" id="btn-login-text" style="margin-top: 10px;">Accedi 💕</button>
+          <div id="login-error" style="color: var(--expense); font-size: 0.85rem; margin-top: 12px; font-weight: 600;"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SCHERMATA APPLICATIVO PRINCIPALE -->
+    <div id="app-view" class="hidden">
+      <div class="app-header">
+        <div class="app-title">
+          <img src="icon.png" alt="Logo" class="app-header-icon" onerror="this.style.display='none'" />
+          <span>MaledettiSoldi</span>
+        </div>
+        <button class="btn-logout" onclick="logout()">Esci 👋</button>
+      </div>
+
+      <!-- Barra dei Saldi -->
+      <div class="summary-grid">
+        <div class="card" style="background: var(--income-bg); border-color: #c9eed3;">
+          <span>Entrate</span>
+          <strong id="total-income" class="val-income">€ 0,00</strong>
+        </div>
+        <div class="card" style="background: var(--expense-bg); border-color: #ffd6d6;">
+          <span>Uscite</span>
+          <strong id="total-expense" class="val-expense">€ 0,00</strong>
+        </div>
+        <div class="card" style="background: #eef3ff; border-color: #d6e2ff;">
+          <span>Saldo</span>
+          <strong id="total-balance" class="val-balance">€ 0,00</strong>
+        </div>
+      </div>
+
+      <!-- Form Nuova Spesa / Entrata -->
+      <div class="form-card">
+        <form id="tx-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="type">Direzione</label>
+              <select id="type" required>
+                <option value="expense">💸 Uscita</option>
+                <option value="income">💰 Entrata</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="amount">Importo (€)</label>
+              <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="category">Categoria</label>
+              <select id="category" required>
+                <option value="Spesa">🛒 Spesa</option>
+                <option value="Bollette">⚡ Bollette</option>
+                <option value="Casa">🏠 Casa & Mutuo</option>
+                <option value="Trasporti">🚗 Auto & Trasporti</option>
+                <option value="Svago">🍕 Cene & Svago</option>
+                <option value="Salute">💊 Salute & Famiglia</option>
+                <option value="Stipendio">💵 Stipendio</option>
+                <option value="Altro">🎈 Altro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="author">Chi Spende?</label>
+              <select id="author" required>
+                <option value="Lui">🧔 Lui</option>
+                <option value="Lei">👩 Lei</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="date">Data</label>
+              <input type="date" id="date" required />
+            </div>
+            <div class="form-group">
+              <label for="description">Descrizione (opzionale)</label>
+              <input type="text" id="description" placeholder="Es. Conad, Farmacia..." />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btn-save">+ Aggiungi Movimento ✨</button>
+        </form>
+      </div>
+
+      <!-- Lista Movimenti -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-size: 1rem;">Movimenti</h3>
+        <span id="tx-count" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">0 movimenti</span>
+      </div>
+      <div id="tx-list"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // Configurazione Supabase con le tue chiavi
+    const SUPABASE_URL = 'https://zteofixorxwhjebuabqp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0ZW9maXhvcnh3aGplYnVhYnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTMzNDUsImV4cCI6MjEwNjA4OTM0NX0.V6Jr0bvLIcsLpqzHi_YZQl71bDMjFat761yHSxGb3d4';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Mappatura Icone per Categoria
+    const categoryIcons = {
+      'Spesa': '🛒',
+      'Bollette': '⚡',
+      'Casa': '🏠',
+      'Trasporti': '🚗',
+      'Svago': '🍕',
+      'Salute': '💊',
+      'Stipendio': '💵',
+      'Altro': '🎈'
+    };
+
+    // Imposta la data odierna
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    // Verifica automatica dello stato sessione all'avvio
+    async function checkAuth() {
+      const { data: { session } } = await client.auth.getSession();
+      if (session) {
+        showApp();
+      } else {
+        showLogin();
+      }
+    }
+
+    function showApp() {
+      document.getElementById('login-view').classList.add('hidden');
+      document.getElementById('app-view').classList.remove('hidden');
+      loadTransactions();
+    }
+
+    function showLogin() {
+      document.getElementById('app-view').classList.add('hidden');
+      document.getElementById('login-view').classList.remove('hidden');
+    }
+
+    // Gestione Accesso
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('btn-login-text');
+      const errEl = document.getElementById('login-error');
+
+      btn.innerText = 'Verifico credenziali... ⏳';
+      btn.disabled = true;
+      errEl.innerText = '';
+
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+      btn.disabled = false;
+      btn.innerText = 'Accedi 💕';
+
+      if (error) {
+        errEl.innerText = 'Credenziali errate o utente non trovato.';
+      } else {
+        showApp();
+      }
+    });
+
+    // Logout
+    async function logout() {
+      await client.auth.signOut();
+      showLogin();
+    }
+
+    // Carica tutti i movimenti registrati
+    async function loadTransactions() {
+      const { data, error } = await client
+        .from('family_expenses')
+        .select('*')
+        .order('date', { ascending: false })
+        .order('id', { ascending: false });
+
+      if (error) {
+        console.error('Errore nel recupero dati:', error);
+        return;
+      }
+
+      renderUI(data || []);
+    }
+
+    function formatCurrency(val) {
+      return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val);
+    }
+
+    // Aggiornamento interfaccia
+    function renderUI(transactions) {
+      let income = 0;
+      let expense = 0;
+      const listEl = document.getElementById('tx-list');
+      listEl.innerHTML = '';
+      document.getElementById('tx-count').innerText = `${transactions.length} movimenti`;
+
+      if (transactions.length === 0) {
+        listEl.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:0.9rem; padding: 30px 0;">Ancora nessun movimento registrato. Inizia ora! ✨</p>';
+      }
+
+      transactions.forEach(tx => {
+        const val = Number(tx.amount);
+        if (tx.type === 'income') income += val;
+        if (tx.type === 'expense') expense += val;
+
+        const isExp = tx.type === 'expense';
+        const icon = categoryIcons[tx.category] || '🎈';
+        const authorIcon = tx.author === 'Lui' ? '🧔' : '👩';
+
+        const item = document.createElement('div');
+        item.className = 'tx-item';
+        item.innerHTML = `
+          <div class="tx-left">
+            <div class="tx-icon">${icon}</div>
+            <div>
+              <div class="tx-cat">${tx.category} ${tx.description ? `<span style="font-weight:normal; color:var(--text-muted); font-size:0.85rem;">· ${tx.description}</span>` : ''}</div>
+              <div class="tx-meta">
+                <span>${tx.date}</span>
+                <span class="tx-badge">${authorIcon} ${tx.author}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <span class="tx-amount ${isExp ? 'val-expense' : 'val-income'}">
+              ${isExp ? '-' : '+'} ${formatCurrency(val)}
+            </span>
+            <button class="btn-del" title="Elimina voce" onclick="deleteTx(${tx.id})">&times;</button>
+          </div>
+        `;
+        listEl.appendChild(item);
+      });
+
+      document.getElementById('total-income').innerText = formatCurrency(income);
+      document.getElementById('total-expense').innerText = formatCurrency(expense);
+      document.getElementById('total-balance').innerText = formatCurrency(income - expense);
+    }
+
+    // Aggiungi Movimento
+    document.getElementById('tx-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save');
+      btn.disabled = true;
+      btn.innerText = 'Salvataggio...';
+
+      const payload = {
+        type: document.getElementById('type').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        category: document.getElementById('category').value,
+        author: document.getElementById('author').value,
+        date: document.getElementById('date').value,
+        description: document.getElementById('description').value.trim()
+      };
+
+      const { error } = await client.from('family_expenses').insert([payload]);
+      btn.disabled = false;
+      btn.innerText = '+ Aggiungi Movimento ✨';
+
+      if (!error) {
+        document.getElementById('amount').value = '';
+        document.getElementById('description').value = '';
+        loadTransactions();
+      } else {
+        alert('Errore nel salvataggio: ' + error.message);
+      }
+    });
+
+    // Elimina Movimento
+    async function deleteTx(id) {
+      if (!confirm('Vuoi davvero cancellare questo movimento?')) return;
+      const { error } = await client.from('family_expenses').delete().eq('id', id);
+      if (!error) {
+        loadTransactions();
+      } else {
+        alert('Errore nella cancellazione: ' + error.message);
+      }
+    }
+
+    // Inizializza l'applicazione
+    checkAuth();
+  </script>
+</body>
+</html>
