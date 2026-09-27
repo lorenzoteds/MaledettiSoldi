@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="theme-color" content="#ff8fab" />
 
-  <!-- Fonts & Chart.js & Supabase -->
+  <!-- Fonts & Supabase & Chart.js -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -32,20 +32,18 @@
       --primary: #ff8fab;
       --primary-dark: #fb6f92;
       --veronica: #9d4edd;
-      --veronica-bg: #f8f0fc;
       --lorenzo: #3a86ff;
-      --lorenzo-bg: #edf4ff;
       --radius: 18px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background-color: var(--bg); color: var(--text); padding: 14px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 620px; }
+    .container { width: 100%; max-width: 640px; }
     .hidden { display: none !important; }
 
     h1, h2, h3 { font-family: 'Comfortaa', cursive; color: #3d3130; }
 
-    /* Navigazione */
+    /* Header Nav */
     .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .app-title { font-size: 1.25rem; font-weight: 700; }
     .nav-actions { display: flex; gap: 6px; }
@@ -55,7 +53,7 @@
     }
     .btn-pill.active { background: var(--primary); color: white; }
 
-    /* Barra Mese */
+    /* Selettore Mese */
     .month-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: var(--card-bg); border: 1.5px solid var(--border); border-radius: var(--radius);
@@ -67,15 +65,15 @@
     }
     .month-title { font-family: 'Comfortaa', cursive; font-size: 1rem; font-weight: 700; color: #3d3130; }
 
-    /* Box Riporto */
-    .carryover-banner {
-      background: #fdfaf6; border: 1.5px dashed #e4d5c7; border-radius: 14px;
+    /* Banner Riporto Mesi Precedenti */
+    .carryover-box {
+      background: #fffcf8; border: 1.5px dashed #ebdcd0; border-radius: 14px;
       padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between;
-      align-items: center; font-size: 0.82rem; color: #6d5d59;
+      align-items: center; font-size: 0.82rem;
     }
-    .carryover-banner strong { font-size: 0.95rem; }
+    .carryover-details { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
 
-    /* Grid Riepilogo Mese */
+    /* Grid Riepilogo */
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
     .card { background: var(--card-bg); border-radius: 14px; padding: 10px 6px; text-align: center; border: 1.5px solid var(--border); }
     .card span { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -85,7 +83,7 @@
     .val-expense { color: var(--expense); }
     .val-balance { color: #3a86ff; }
 
-    /* Form Inserimento */
+    /* Card Form */
     .section-card {
       background: var(--card-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
       border: 1.5px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02);
@@ -106,9 +104,9 @@
     }
     .btn-submit:active { transform: scale(0.98); }
 
-    /* Due Colonne */
+    /* Colonne Veronica e Lorenzo */
     .columns-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 540px) {
+    @media (max-width: 560px) {
       .columns-container { grid-template-columns: 1fr; }
     }
     .column-box {
@@ -127,7 +125,7 @@
     .lorenzo-col .column-title { color: var(--lorenzo); }
     .column-total { font-weight: 800; font-size: 0.88rem; }
 
-    /* Schede Spesa Singola */
+    /* Singola voce di spesa */
     .tx-item {
       background: #faf7f4; border: 1px solid #ebdcd0; border-radius: 12px;
       padding: 8px 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
@@ -152,8 +150,8 @@
 <body>
   <div class="container">
 
-    <!-- LOGIN -->
-    <div id="login-view" style="margin-top: 50px; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto;">
+    <!-- SCHERMATA LOGIN -->
+    <div id="login-view" style="margin-top: 40px; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto;">
       <div class="section-card">
         <div style="font-size: 3.5rem; margin-bottom: 8px;">🐷💸</div>
         <h2 style="font-size: 1.4rem; margin-bottom: 4px;">MaledettiSoldi</h2>
@@ -173,7 +171,7 @@
       </div>
     </div>
 
-    <!-- MAIN APP -->
+    <!-- SCHERMATA PRINCIPALE APP -->
     <div id="app-view" class="hidden">
       <!-- Intestazione -->
       <div class="app-header">
@@ -193,19 +191,19 @@
         <button class="month-btn" onclick="changeMonth(1)">▶</button>
       </div>
 
-      <!-- VISTA 1: SPESE & DUE COLONNE -->
+      <!-- TAB 1: SPESE & DUE COLONNE -->
       <div id="view-home">
         
         <!-- Banner Riporto Mese Precedente -->
-        <div class="carryover-banner">
+        <div class="carryover-box">
           <div>
-            <span>Riporto dai mesi precedenti:</span>
-            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">(Entrate passate - Spese passate)</div>
+            <strong>Riporto mesi precedenti</strong>
+            <div class="carryover-details" id="carryover-breakdown">Entrate passate vs Uscite passate</div>
           </div>
           <strong id="carryover-val">€ 0,00</strong>
         </div>
 
-        <!-- Riepilogo con Totale Mensile + Giacenza Totale Reale -->
+        <!-- Riepilogo con Totale Mensile + Disponibilità Effettiva -->
         <div class="summary-grid">
           <div class="card" style="background: var(--income-bg); border-color: #ccefe9;">
             <span>Entrate Mese</span>
@@ -220,11 +218,11 @@
           <div class="card" style="background: #eef2ff; border-color: #dbe4ff;">
             <span>Disponibilità</span>
             <strong id="total-balance" class="val-balance">€ 0,00</strong>
-            <small id="balance-badge">Mese + Riporto</small>
+            <small>Giacenza totale</small>
           </div>
         </div>
 
-        <!-- Form Nuova Voce -->
+        <!-- Form Inserimento Spesa / Entrata -->
         <div class="section-card">
           <form id="tx-form">
             <div class="form-row">
@@ -301,7 +299,7 @@
         </div>
       </div>
 
-      <!-- VISTA 2: GRAFICI -->
+      <!-- TAB 2: GRAFICI -->
       <div id="view-stats" class="hidden">
         <div class="section-card">
           <h3 style="font-size: 0.95rem; margin-bottom: 4px;">Ripartizione Spese del Mese</h3>
@@ -315,7 +313,7 @@
         </div>
       </div>
 
-      <!-- VISTA 3: EXPORT & ARCHIVIO -->
+      <!-- TAB 3: EXPORT & ARCHIVIO -->
       <div id="view-admin" class="hidden">
         <div class="section-card">
           <h3 style="font-size: 0.95rem; margin-bottom: 4px;">Esportazione & Backup Excel</h3>
@@ -384,7 +382,7 @@
       btn.innerText = 'Accedi 💕';
 
       if (error) {
-        errEl.innerText = 'Email o password errata.';
+        errEl.innerText = 'Email o password errata: ' + error.message;
       } else {
         showApp();
       }
@@ -439,7 +437,7 @@
       const monthName = currentSelectedDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
       document.getElementById('current-month-label').innerText = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
-      // 1. Calcolo del Riporto (Tutti i movimenti con data ANTERIORE al 1° del mese corrente)
+      // 1. Calcolo del Riporto Storico (transazioni con data < 1° giorno del mese corrente)
       let prevIncome = 0;
       let prevExpense = 0;
 
@@ -453,14 +451,12 @@
 
       allTransactions.forEach(tx => {
         const val = Number(tx.amount);
-        const txDate = tx.date; // formato YYYY-MM-DD
+        const txDate = tx.date;
 
         if (txDate < monthStartStr) {
-          // Appartiene a un mese precedente: calcola riporto
           if (tx.type === 'income') prevIncome += val;
           if (tx.type === 'expense') prevExpense += val;
         } else {
-          // Verifica se è nel mese corrente
           const [txY, txM] = txDate.split('-').map(Number);
           if (txY === year && txM === (month + 1)) {
             currentMonthTx.push(tx);
@@ -479,15 +475,20 @@
       const carryOverBalance = prevIncome - prevExpense;
       const totalAvailable = carryOverBalance + monthIncome - monthExpense;
 
-      // Aggiornamento Banner Riporto
+      // Banner Riporto
       const carryOverEl = document.getElementById('carryover-val');
       carryOverEl.innerText = formatCurrency(carryOverBalance);
       carryOverEl.style.color = carryOverBalance >= 0 ? 'var(--income)' : 'var(--expense)';
+      document.getElementById('carryover-breakdown').innerText = `Entrate passate (${formatCurrency(prevIncome)}) - Uscite passate (${formatCurrency(prevExpense)})`;
 
-      // Aggiornamento Box Riepilogo
+      // Note riporto nei box
+      document.getElementById('income-prev-note').innerText = prevIncome > 0 ? `+${formatCurrency(prevIncome)} prec.` : '';
+      document.getElementById('expense-prev-note').innerText = prevExpense > 0 ? `+${formatCurrency(prevExpense)} prec.` : '';
+
+      // Box Totali Mese
       document.getElementById('total-income').innerText = formatCurrency(monthIncome);
       document.getElementById('total-expense').innerText = formatCurrency(monthExpense);
-      
+
       const balanceEl = document.getElementById('total-balance');
       balanceEl.innerText = formatCurrency(totalAvailable);
       balanceEl.style.color = totalAvailable >= 0 ? '#3a86ff' : 'var(--expense)';
@@ -496,7 +497,7 @@
       document.getElementById('veronica-total').innerText = formatCurrency(veronicaExpenses);
       document.getElementById('lorenzo-total').innerText = formatCurrency(lorenzoExpenses);
 
-      // Render elenchi nelle due colonne
+      // Render elenchi
       const veronicaList = document.getElementById('veronica-list');
       const lorenzoList = document.getElementById('lorenzo-list');
       veronicaList.innerHTML = '';
@@ -583,4 +584,90 @@
             data: data,
             backgroundColor: [
               '#ff8fab', '#ffd166', '#06d6a0', '#118ab2',
-              '#8338ec', '#ff
+              '#8338ec', '#ff9f1c', '#4cc9f0', '#b5e2fa'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    // Inserimento Movimento
+    document.getElementById('tx-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save');
+      btn.disabled = true;
+
+      const payload = {
+        type: document.getElementById('type').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        category: document.getElementById('category').value,
+        author: document.getElementById('author').value,
+        date: document.getElementById('date').value,
+        description: document.getElementById('description').value.trim()
+      };
+
+      const { error } = await client.from('family_expenses').insert([payload]);
+      btn.disabled = false;
+
+      if (!error) {
+        document.getElementById('amount').value = '';
+        document.getElementById('description').value = '';
+        loadTransactions();
+      } else {
+        alert('Errore nel salvataggio: ' + error.message);
+      }
+    });
+
+    // Eliminazione Movimento
+    async function deleteTx(id) {
+      if (!confirm('Vuoi eliminare questo movimento?')) return;
+      const { error } = await client.from('family_expenses').delete().eq('id', id);
+      if (!error) loadTransactions();
+    }
+
+    // Export CSV
+    function exportCSV(onlyCurrentMonth) {
+      let filtered = allTransactions;
+      let filename = 'maledetti_soldi_tutto.csv';
+
+      if (onlyCurrentMonth) {
+        const year = currentSelectedDate.getFullYear();
+        const month = currentSelectedDate.getMonth();
+        filtered = allTransactions.filter(tx => {
+          const [txY, txM] = tx.date.split('-').map(Number);
+          return txY === year && txM === (month + 1);
+        });
+        filename = `maledetti_soldi_${year}_${month + 1}.csv`;
+      }
+
+      if (filtered.length === 0) {
+        alert('Nessun movimento da esportare per questo periodo.');
+        return;
+      }
+
+      let csv = 'ID;Data;Tipo;Categoria;Importo;Chi;Descrizione\n';
+      filtered.forEach(tx => {
+        csv += `${tx.id};"${tx.date}";"${tx.type}";"${tx.category}";"${Number(tx.amount).toFixed(2)}";"${tx.author}";"${(tx.description || '').replace(/"/g, '""')}"\n`;
+      });
+
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Avvio e controllo sessione
+    checkAuth();
+  </script>
+</body>
+</html>
