@@ -1,179 +1,586 @@
-<!-- LOGIN -->
-<div id="login-view" style="margin-top: 50px; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto;">
-  <div class="section-card">
-    <div style="font-size: 3.5rem; margin-bottom: 8px;">🐷💸</div>
-    <h2 style="font-size: 1.4rem; margin-bottom: 4px;">MaledettiSoldi</h2>
-    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px;">I conti di casa in armonia</p>
-    <form id="login-form">
-      <div class="form-group" style="text-align: left;">
-        <label for="login-email">Email</label>
-        <input type="email" id="login-email" placeholder="famiglia@casa.it" required />
-      </div>
-      <div class="form-group" style="text-align: left;">
-        <label for="login-password">Password</label>
-        <input type="password" id="login-password" placeholder="••••••••" required />
-      </div>
-      <button type="submit" class="btn-submit" id="btn-login-text">Accedi 💕</button>
-      <div id="login-error" style="color: var(--expense); font-size: 0.85rem; margin-top: 10px;"></div>
-    </form>
-  </div>
-</div>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MaledettiSoldi 💸</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#ff8fab" />
 
-<!-- MAIN APP -->
-<div id="app-view" class="hidden">
-  <!-- Intestazione -->
-  <div class="app-header">
-    <div class="app-title">🐷 MaledettiSoldi</div>
-    <div class="nav-actions">
-      <button class="btn-pill active" id="tab-home" onclick="switchTab('home')">Spese</button>
-      <button class="btn-pill" id="tab-stats" onclick="switchTab('stats')">Grafici</button>
-      <button class="btn-pill" id="tab-admin" onclick="switchTab('admin')">Export</button>
-      <button class="btn-pill" onclick="logout()">Esci</button>
-    </div>
-  </div>
+  <!-- Fonts & Chart.js & Supabase -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Barra Selettore Mese -->
-  <div class="month-bar">
-    <button class="month-btn" onclick="changeMonth(-1)">◀</button>
-    <div class="month-title" id="current-month-label">Caricamento...</div>
-    <button class="month-btn" onclick="changeMonth(1)">▶</button>
-  </div>
+  <style>
+    :root {
+      --bg: #fff8f3;
+      --card-bg: #ffffff;
+      --border: #f0e6dd;
+      --text: #4a3e3d;
+      --text-muted: #9c8e8c;
+      --income: #2a9d8f;
+      --income-bg: #e8f7f5;
+      --expense: #e76f51;
+      --expense-bg: #fdeee9;
+      --primary: #ff8fab;
+      --primary-dark: #fb6f92;
+      --veronica: #9d4edd;
+      --veronica-bg: #f8f0fc;
+      --lorenzo: #3a86ff;
+      --lorenzo-bg: #edf4ff;
+      --radius: 18px;
+    }
 
-  <!-- VISTA 1: SPESE & DUE COLONNE -->
-  <div id="view-home">
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg); color: var(--text); padding: 14px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 620px; }
+    .hidden { display: none !important; }
+
+    h1, h2, h3 { font-family: 'Comfortaa', cursive; color: #3d3130; }
+
+    /* Navigazione */
+    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .app-title { font-size: 1.25rem; font-weight: 700; }
+    .nav-actions { display: flex; gap: 6px; }
+    .btn-pill {
+      background: #f7ebe1; border: none; color: #7a655f; padding: 6px 12px; border-radius: 14px;
+      font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-pill.active { background: var(--primary); color: white; }
+
+    /* Barra Mese */
+    .month-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card-bg); border: 1.5px solid var(--border); border-radius: var(--radius);
+      padding: 8px 14px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .month-btn {
+      background: #faf2ec; border: none; font-size: 1rem; color: #5c4b48;
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-weight: 700;
+    }
+    .month-title { font-family: 'Comfortaa', cursive; font-size: 1rem; font-weight: 700; color: #3d3130; }
+
+    /* Box Riporto */
+    .carryover-banner {
+      background: #fdfaf6; border: 1.5px dashed #e4d5c7; border-radius: 14px;
+      padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between;
+      align-items: center; font-size: 0.82rem; color: #6d5d59;
+    }
+    .carryover-banner strong { font-size: 0.95rem; }
+
+    /* Grid Riepilogo Mese */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .card { background: var(--card-bg); border-radius: 14px; padding: 10px 6px; text-align: center; border: 1.5px solid var(--border); }
+    .card span { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card strong { font-size: 1.05rem; display: block; margin-top: 3px; }
+    .card small { font-size: 0.68rem; display: block; color: var(--text-muted); margin-top: 2px; }
+    .val-income { color: var(--income); }
+    .val-expense { color: var(--expense); }
+    .val-balance { color: #3a86ff; }
+
+    /* Form Inserimento */
+    .section-card {
+      background: var(--card-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
+      border: 1.5px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+    .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label { font-size: 0.78rem; color: var(--text-muted); font-weight: 700; margin-left: 2px; }
+    input, select {
+      background: #faf6f0; border: 1.5px solid #ebdcd0; border-radius: 12px; color: var(--text);
+      padding: 10px 12px; font-size: 0.92rem; outline: none; width: 100%; transition: border 0.2s;
+    }
+    input:focus, select:focus { border-color: var(--primary); background: #ffffff; }
+    .btn-submit {
+      width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white; border: none; border-radius: 14px; padding: 12px; font-size: 0.98rem;
+      font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(251, 111, 146, 0.28);
+      margin-top: 4px;
+    }
+    .btn-submit:active { transform: scale(0.98); }
+
+    /* Due Colonne */
+    .columns-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 540px) {
+      .columns-container { grid-template-columns: 1fr; }
+    }
+    .column-box {
+      background: var(--card-bg); border-radius: var(--radius); border: 1.5px solid var(--border);
+      padding: 12px; min-height: 180px; display: flex; flex-direction: column;
+    }
+    .veronica-col { border-color: #e2cbf7; }
+    .lorenzo-col { border-color: #c5dcff; }
     
-    <!-- Banner Riporto Mese Precedente -->
-    <div class="carryover-banner">
-      <div>
-        <span>Riporto dai mesi precedenti:</span>
-        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">(Entrate passate - Spese passate)</div>
+    .column-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 8px; border-bottom: 1.5px dashed var(--border); margin-bottom: 10px;
+    }
+    .column-title { font-weight: 800; font-size: 0.95rem; }
+    .veronica-col .column-title { color: var(--veronica); }
+    .lorenzo-col .column-title { color: var(--lorenzo); }
+    .column-total { font-weight: 800; font-size: 0.88rem; }
+
+    /* Schede Spesa Singola */
+    .tx-item {
+      background: #faf7f4; border: 1px solid #ebdcd0; border-radius: 12px;
+      padding: 8px 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .tx-item.is-income { background: var(--income-bg); border-color: #bce8e1; }
+    .tx-desc { font-weight: 700; font-size: 0.85rem; line-height: 1.2; }
+    .tx-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .tx-amount { font-weight: 800; font-size: 0.9rem; text-align: right; }
+    .btn-del { background: transparent; border: none; color: #b8a8a2; font-size: 1.15rem; cursor: pointer; margin-left: 6px; }
+    .btn-del:hover { color: var(--expense); }
+
+    .empty-placeholder { text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px 0; }
+    .chart-box { max-width: 320px; margin: 0 auto 10px auto; }
+    .btn-admin {
+      width: 100%; background: #fdf2e9; border: 1.5px solid #ebdcd0; color: #7a655f;
+      padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+      margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-admin:hover { background: #fae8db; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- LOGIN -->
+    <div id="login-view" style="margin-top: 50px; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto;">
+      <div class="section-card">
+        <div style="font-size: 3.5rem; margin-bottom: 8px;">🐷💸</div>
+        <h2 style="font-size: 1.4rem; margin-bottom: 4px;">MaledettiSoldi</h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px;">I conti di casa in armonia</p>
+        <form id="login-form">
+          <div class="form-group" style="text-align: left;">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" placeholder="famiglia@casa.it" required />
+          </div>
+          <div class="form-group" style="text-align: left;">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn-submit" id="btn-login-text">Accedi 💕</button>
+          <div id="login-error" style="color: var(--expense); font-size: 0.85rem; margin-top: 10px;"></div>
+        </form>
       </div>
-      <strong id="carryover-val">€ 0,00</strong>
     </div>
 
-    <!-- Riepilogo con Totale Mensile + Giacenza Totale Reale -->
-    <div class="summary-grid">
-      <div class="card" style="background: var(--income-bg); border-color: #ccefe9;">
-        <span>Entrate Mese</span>
-        <strong id="total-income" class="val-income">€ 0,00</strong>
-        <small id="income-prev-note"></small>
+    <!-- MAIN APP -->
+    <div id="app-view" class="hidden">
+      <!-- Intestazione -->
+      <div class="app-header">
+        <div class="app-title">🐷 MaledettiSoldi</div>
+        <div class="nav-actions">
+          <button class="btn-pill active" id="tab-home" onclick="switchTab('home')">Spese</button>
+          <button class="btn-pill" id="tab-stats" onclick="switchTab('stats')">Grafici</button>
+          <button class="btn-pill" id="tab-admin" onclick="switchTab('admin')">Export</button>
+          <button class="btn-pill" onclick="logout()">Esci</button>
+        </div>
       </div>
-      <div class="card" style="background: var(--expense-bg); border-color: #fbd6cc;">
-        <span>Uscite Mese</span>
-        <strong id="total-expense" class="val-expense">€ 0,00</strong>
-        <small id="expense-prev-note"></small>
-      </div>
-      <div class="card" style="background: #eef2ff; border-color: #dbe4ff;">
-        <span>Disponibilità</span>
-        <strong id="total-balance" class="val-balance">€ 0,00</strong>
-        <small id="balance-badge">Mese + Riporto</small>
-      </div>
-    </div>
 
-    <!-- Form Nuova Voce -->
-    <div class="section-card">
-      <form id="tx-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="type">Direzione</label>
-            <select id="type" required>
-              <option value="expense">💸 Uscita</option>
-              <option value="income">💰 Entrata (Stipendio/Extra)</option>
-            </select>
+      <!-- Barra Selettore Mese -->
+      <div class="month-bar">
+        <button class="month-btn" onclick="changeMonth(-1)">◀</button>
+        <div class="month-title" id="current-month-label">Caricamento...</div>
+        <button class="month-btn" onclick="changeMonth(1)">▶</button>
+      </div>
+
+      <!-- VISTA 1: SPESE & DUE COLONNE -->
+      <div id="view-home">
+        
+        <!-- Banner Riporto Mese Precedente -->
+        <div class="carryover-banner">
+          <div>
+            <span>Riporto dai mesi precedenti:</span>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">(Entrate passate - Spese passate)</div>
           </div>
-          <div class="form-group">
-            <label for="amount">Importo (€)</label>
-            <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required />
+          <strong id="carryover-val">€ 0,00</strong>
+        </div>
+
+        <!-- Riepilogo con Totale Mensile + Giacenza Totale Reale -->
+        <div class="summary-grid">
+          <div class="card" style="background: var(--income-bg); border-color: #ccefe9;">
+            <span>Entrate Mese</span>
+            <strong id="total-income" class="val-income">€ 0,00</strong>
+            <small id="income-prev-note"></small>
+          </div>
+          <div class="card" style="background: var(--expense-bg); border-color: #fbd6cc;">
+            <span>Uscite Mese</span>
+            <strong id="total-expense" class="val-expense">€ 0,00</strong>
+            <small id="expense-prev-note"></small>
+          </div>
+          <div class="card" style="background: #eef2ff; border-color: #dbe4ff;">
+            <span>Disponibilità</span>
+            <strong id="total-balance" class="val-balance">€ 0,00</strong>
+            <small id="balance-badge">Mese + Riporto</small>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="category">Categoria</label>
-            <select id="category" required>
-              <option value="Spesa">🛒 Spesa Alimentare</option>
-              <option value="Bollette">⚡ Bollette & Utenze</option>
-              <option value="Casa">🏠 Casa & Mutuo</option>
-              <option value="Trasporti">🚗 Auto & Carburante</option>
-              <option value="Svago">🍕 Cene & Svago</option>
-              <option value="Salute">💊 Salute & Famiglia</option>
-              <option value="Stipendio">💵 Stipendio</option>
-              <option value="Altro">🎈 Altro</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="author">Chi?</label>
-            <select id="author" required>
-              <option value="Veronica">👩 Veronica</option>
-              <option value="Lorenzo">🧔 Lorenzo</option>
-            </select>
-          </div>
+        <!-- Form Nuova Voce -->
+        <div class="section-card">
+          <form id="tx-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="type">Direzione</label>
+                <select id="type" required>
+                  <option value="expense">💸 Uscita</option>
+                  <option value="income">💰 Entrata (Stipendio/Extra)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="amount">Importo (€)</label>
+                <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="category">Categoria</label>
+                <select id="category" required>
+                  <option value="Spesa">🛒 Spesa Alimentare</option>
+                  <option value="Bollette">⚡ Bollette & Utenze</option>
+                  <option value="Casa">🏠 Casa & Mutuo</option>
+                  <option value="Trasporti">🚗 Auto & Carburante</option>
+                  <option value="Svago">🍕 Cene & Svago</option>
+                  <option value="Salute">💊 Salute & Famiglia</option>
+                  <option value="Stipendio">💵 Stipendio</option>
+                  <option value="Altro">🎈 Altro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="author">Chi?</label>
+                <select id="author" required>
+                  <option value="Veronica">👩 Veronica</option>
+                  <option value="Lorenzo">🧔 Lorenzo</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="date">Data</label>
+                <input type="date" id="date" required />
+              </div>
+              <div class="form-group">
+                <label for="description">Nota (opzionale)</label>
+                <input type="text" id="description" placeholder="Es. Conad, Enel..." />
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btn-save">+ Salva Movimento ✨</button>
+          </form>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="date">Data</label>
-            <input type="date" id="date" required />
+        <!-- DUE COLONNE: VERONICA E LORENZO -->
+        <div class="columns-container">
+          <!-- Colonna Veronica -->
+          <div class="column-box veronica-col">
+            <div class="column-header">
+              <div class="column-title">👩 Veronica</div>
+              <div class="column-total" id="veronica-total">€ 0,00</div>
+            </div>
+            <div id="veronica-list"></div>
           </div>
-          <div class="form-group">
-            <label for="description">Nota (opzionale)</label>
-            <input type="text" id="description" placeholder="Es. Conad, Enel..." />
+
+          <!-- Colonna Lorenzo -->
+          <div class="column-box lorenzo-col">
+            <div class="column-header">
+              <div class="column-title">🧔 Lorenzo</div>
+              <div class="column-total" id="lorenzo-total">€ 0,00</div>
+            </div>
+            <div id="lorenzo-list"></div>
           </div>
         </div>
-
-        <button type="submit" class="btn-submit" id="btn-save">+ Salva Movimento ✨</button>
-      </form>
-    </div>
-
-    <!-- DUE COLONNE: VERONICA E LORENZO -->
-    <div class="columns-container">
-      <!-- Colonna Veronica -->
-      <div class="column-box veronica-col">
-        <div class="column-header">
-          <div class="column-title">👩 Veronica</div>
-          <div class="column-total" id="veronica-total">€ 0,00</div>
-        </div>
-        <div id="veronica-list"></div>
       </div>
 
-      <!-- Colonna Lorenzo -->
-      <div class="column-box lorenzo-col">
-        <div class="column-header">
-          <div class="column-title">🧔 Lorenzo</div>
-          <div class="column-total" id="lorenzo-total">€ 0,00</div>
+      <!-- VISTA 2: GRAFICI -->
+      <div id="view-stats" class="hidden">
+        <div class="section-card">
+          <h3 style="font-size: 0.95rem; margin-bottom: 4px;">Ripartizione Spese del Mese</h3>
+          <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 12px;">Categorie uscite del mese visualizzato.</p>
+          <div class="chart-box">
+            <canvas id="categoryChart"></canvas>
+          </div>
+          <div id="chart-empty-msg" class="hidden empty-placeholder">
+            Nessuna spesa registrata in questo mese.
+          </div>
         </div>
-        <div id="lorenzo-list"></div>
       </div>
+
+      <!-- VISTA 3: EXPORT & ARCHIVIO -->
+      <div id="view-admin" class="hidden">
+        <div class="section-card">
+          <h3 style="font-size: 0.95rem; margin-bottom: 4px;">Esportazione & Backup Excel</h3>
+          <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 14px;">Scarica tutti i dati in un file CSV compatibile con Excel.</p>
+          
+          <button class="btn-admin" onclick="exportCSV(true)">
+            📊 Scarica Excel (Mese Visualizzato)
+          </button>
+          <button class="btn-admin" onclick="exportCSV(false)">
+            📁 Scarica Tutto lo Storico (Dall'Inizio)
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- VISTA 2: GRAFICI -->
-  <div id="view-stats" class="hidden">
-    <div class="section-card">
-      <h3 style="font-size: 0.95rem; margin-bottom: 4px;">Ripartizione Spese del Mese</h3>
-      <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 12px;">Categorie uscite del mese visualizzato.</p>
-      <div class="chart-box">
-        <canvas id="categoryChart"></canvas>
-      </div>
-      <div id="chart-empty-msg" class="hidden empty-placeholder">
-        Nessuna spesa registrata in questo mese.
-      </div>
-    </div>
-  </div>
+  <script>
+    // --- CREDENZIALI SUPABASE ---
+    const SUPABASE_URL = 'https://zteofixorxwhjebuabqp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0ZW9maXhvcnh3aGplYnVhYnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTMzNDUsImV4cCI6MjEwNjA4OTM0NX0.V6Jr0bvLIcsLpqzHi_YZQl71bDMjFat761yHSxGb3d4';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  <!-- VISTA 3: EXPORT & ARCHIVIO -->
-  <div id="view-admin" class="hidden">
-    <div class="section-card">
-      <h3 style="font-size: 0.95rem; margin-bottom: 4px;">Esportazione & Backup Excel</h3>
-      <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 14px;">Scarica tutti i dati in un file CSV compatibile con Excel.</p>
+    const categoryIcons = {
+      'Spesa': '🛒', 'Bollette': '⚡', 'Casa': '🏠', 'Trasporti': '🚗',
+      'Svago': '🍕', 'Salute': '💊', 'Stipendio': '💵', 'Altro': '🎈'
+    };
+
+    let allTransactions = [];
+    let currentSelectedDate = new Date();
+    let donutChartInstance = null;
+
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    async function checkAuth() {
+      const { data: { session } } = await client.auth.getSession();
+      if (session) {
+        showApp();
+      } else {
+        showLogin();
+      }
+    }
+
+    function showApp() {
+      document.getElementById('login-view').classList.add('hidden');
+      document.getElementById('app-view').classList.remove('hidden');
+      loadTransactions();
+    }
+
+    function showLogin() {
+      document.getElementById('app-view').classList.add('hidden');
+      document.getElementById('login-view').classList.remove('hidden');
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('btn-login-text');
+      const errEl = document.getElementById('login-error');
       
-      <button class="btn-admin" onclick="exportCSV(true)">
-        📊 Scarica Excel (Mese Visualizzato)
-      </button>
-      <button class="btn-admin" onclick="exportCSV(false)">
-        📁 Scarica Tutto lo Storico (Dall'Inizio)
-      </button>
-    </div>
-  </div>
+      btn.innerText = 'Verifico... ⏳';
+      errEl.innerText = '';
 
-</div>
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+      btn.innerText = 'Accedi 💕';
+
+      if (error) {
+        errEl.innerText = 'Email o password errata.';
+      } else {
+        showApp();
+      }
+    });
+
+    async function logout() {
+      await client.auth.signOut();
+      showLogin();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.btn-pill').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`tab-${tabName}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      document.getElementById('view-home').classList.toggle('hidden', tabName !== 'home');
+      document.getElementById('view-stats').classList.toggle('hidden', tabName !== 'stats');
+      document.getElementById('view-admin').classList.toggle('hidden', tabName !== 'admin');
+
+      if (tabName === 'stats') {
+        renderChart();
+      }
+    }
+
+    function changeMonth(delta) {
+      currentSelectedDate.setMonth(currentSelectedDate.getMonth() + delta);
+      renderUI();
+    }
+
+    async function loadTransactions() {
+      const { data, error } = await client
+        .from('family_expenses')
+        .select('*')
+        .order('date', { ascending: false })
+        .order('id', { ascending: false });
+
+      if (!error) {
+        allTransactions = data || [];
+        renderUI();
+      }
+    }
+
+    function formatCurrency(val) {
+      return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val);
+    }
+
+    function renderUI() {
+      const year = currentSelectedDate.getFullYear();
+      const month = currentSelectedDate.getMonth();
+      const monthStartStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+
+      const monthName = currentSelectedDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+      document.getElementById('current-month-label').innerText = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+      // 1. Calcolo del Riporto (Tutti i movimenti con data ANTERIORE al 1° del mese corrente)
+      let prevIncome = 0;
+      let prevExpense = 0;
+
+      // 2. Calcolo del Mese Corrente
+      let monthIncome = 0;
+      let monthExpense = 0;
+      let veronicaExpenses = 0;
+      let lorenzoExpenses = 0;
+
+      const currentMonthTx = [];
+
+      allTransactions.forEach(tx => {
+        const val = Number(tx.amount);
+        const txDate = tx.date; // formato YYYY-MM-DD
+
+        if (txDate < monthStartStr) {
+          // Appartiene a un mese precedente: calcola riporto
+          if (tx.type === 'income') prevIncome += val;
+          if (tx.type === 'expense') prevExpense += val;
+        } else {
+          // Verifica se è nel mese corrente
+          const [txY, txM] = txDate.split('-').map(Number);
+          if (txY === year && txM === (month + 1)) {
+            currentMonthTx.push(tx);
+            if (tx.type === 'income') {
+              monthIncome += val;
+            } else {
+              monthExpense += val;
+              const normalizedAuthor = (tx.author === 'Lei' || tx.author === 'Veronica') ? 'Veronica' : 'Lorenzo';
+              if (normalizedAuthor === 'Veronica') veronicaExpenses += val;
+              if (normalizedAuthor === 'Lorenzo') lorenzoExpenses += val;
+            }
+          }
+        }
+      });
+
+      const carryOverBalance = prevIncome - prevExpense;
+      const totalAvailable = carryOverBalance + monthIncome - monthExpense;
+
+      // Aggiornamento Banner Riporto
+      const carryOverEl = document.getElementById('carryover-val');
+      carryOverEl.innerText = formatCurrency(carryOverBalance);
+      carryOverEl.style.color = carryOverBalance >= 0 ? 'var(--income)' : 'var(--expense)';
+
+      // Aggiornamento Box Riepilogo
+      document.getElementById('total-income').innerText = formatCurrency(monthIncome);
+      document.getElementById('total-expense').innerText = formatCurrency(monthExpense);
+      
+      const balanceEl = document.getElementById('total-balance');
+      balanceEl.innerText = formatCurrency(totalAvailable);
+      balanceEl.style.color = totalAvailable >= 0 ? '#3a86ff' : 'var(--expense)';
+
+      // Subtotali Colonne
+      document.getElementById('veronica-total').innerText = formatCurrency(veronicaExpenses);
+      document.getElementById('lorenzo-total').innerText = formatCurrency(lorenzoExpenses);
+
+      // Render elenchi nelle due colonne
+      const veronicaList = document.getElementById('veronica-list');
+      const lorenzoList = document.getElementById('lorenzo-list');
+      veronicaList.innerHTML = '';
+      lorenzoList.innerHTML = '';
+
+      let vCount = 0;
+      let lCount = 0;
+
+      currentMonthTx.forEach(tx => {
+        const isExp = tx.type === 'expense';
+        const val = Number(tx.amount);
+        const icon = categoryIcons[tx.category] || '🎈';
+        const normalizedAuthor = (tx.author === 'Lei' || tx.author === 'Veronica') ? 'Veronica' : 'Lorenzo';
+
+        const item = document.createElement('div');
+        item.className = `tx-item ${isExp ? '' : 'is-income'}`;
+        item.innerHTML = `
+          <div>
+            <div class="tx-desc">${icon} ${tx.category} ${tx.description ? `<span style="font-weight:normal; color:var(--text-muted); font-size:0.78rem;">· ${tx.description}</span>` : ''}</div>
+            <div class="tx-sub">${tx.date}</div>
+          </div>
+          <div style="display:flex; align-items:center;">
+            <div class="tx-amount" style="color: ${isExp ? 'var(--expense)' : 'var(--income)'};">
+              ${isExp ? '-' : '+'} ${formatCurrency(val)}
+            </div>
+            <button class="btn-del" onclick="deleteTx(${tx.id})">&times;</button>
+          </div>
+        `;
+
+        if (normalizedAuthor === 'Veronica') {
+          veronicaList.appendChild(item);
+          vCount++;
+        } else {
+          lorenzoList.appendChild(item);
+          lCount++;
+        }
+      });
+
+      if (vCount === 0) veronicaList.innerHTML = '<div class="empty-placeholder">Nessuna spesa per Veronica</div>';
+      if (lCount === 0) lorenzoList.innerHTML = '<div class="empty-placeholder">Nessuna spesa per Lorenzo</div>';
+
+      renderChart();
+    }
+
+    function renderChart() {
+      const year = currentSelectedDate.getFullYear();
+      const month = currentSelectedDate.getMonth();
+      const currentMonthTx = allTransactions.filter(tx => {
+        const [txY, txM] = tx.date.split('-').map(Number);
+        return txY === year && txM === (month + 1) && tx.type === 'expense';
+      });
+
+      const chartCanvas = document.getElementById('categoryChart');
+      const emptyMsg = document.getElementById('chart-empty-msg');
+
+      if (currentMonthTx.length === 0) {
+        chartCanvas.classList.add('hidden');
+        emptyMsg.classList.remove('hidden');
+        if (donutChartInstance) donutChartInstance.destroy();
+        return;
+      }
+
+      chartCanvas.classList.remove('hidden');
+      emptyMsg.classList.add('hidden');
+
+      const catTotals = {};
+      currentMonthTx.forEach(tx => {
+        catTotals[tx.category] = (catTotals[tx.category] || 0) + Number(tx.amount);
+      });
+
+      const labels = Object.keys(catTotals);
+      const data = Object.values(catTotals);
+
+      if (donutChartInstance) {
+        donutChartInstance.destroy();
+      }
+
+      const ctx = chartCanvas.getContext('2d');
+      donutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: [
+              '#ff8fab', '#ffd166', '#06d6a0', '#118ab2',
+              '#8338ec', '#ff
